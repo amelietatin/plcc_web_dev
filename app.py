@@ -17,34 +17,37 @@ st.set_page_config(page_title="Land Cover Change Predictions", page_icon="🔍",
 #df = pd.read_csv('raw_data/pivot_pa_2015_2024.csv')
 df = pd.read_csv('raw_data/final_data_2015_2035.csv')
 
-# Drop 'Unnamed: 0' column if it exists (as I haad this problem before)
+#Drop 'Unnamed: 0' column if it exists (as I haad this problem before)
 if 'Unnamed: 0' in df.columns:
     df = df.drop(columns=['Unnamed: 0'])
 
-if 'temperature_quarterly_mean' in df.columns:
-    df = df.drop(columns=['temperature_quarterly_mean'])
+df_lc = df.drop(columns=['temperature_quarterly_mean', 'precipitation_quarterly_mean', 'water-vapor-pressure_quarterly_mean', 'cloud-cover_quarterly_mean'])
+df_eco = df[["SITECODE", "quarter_start", "temperature_quarterly_mean", "precipitation_quarterly_mean", "water-vapor-pressure_quarterly_mean", "cloud-cover_quarterly_mean"]].copy()
 
-if 'precipitation_quarterly_mean' in df.columns:
-    df = df.drop(columns=['precipitation_quarterly_mean'])
 
-if 'water-vapor-pressure_quarterly_mean' in df.columns:
-    df = df.drop(columns=['water-vapor-pressure_quarterly_mean'])
+# if 'Unnamed: 0' in df_eco.columns:
+#     df = df_eco.drop(columns=['Unnamed: 0'])
 
-if 'cloud-cover_quarterly_mean' in df.columns:
-    df = df.drop(columns=['cloud-cover_quarterly_mean'])
+# if 'temperature_quarterly_mean' in df.columns:
+#     df = df.drop(columns=['temperature_quarterly_mean'])
+
+# if 'precipitation_quarterly_mean' in df.columns:
+#     df = df.drop(columns=['precipitation_quarterly_mean'])
+
+# if 'water-vapor-pressure_quarterly_mean' in df.columns:
+#     df = df.drop(columns=['water-vapor-pressure_quarterly_mean'])
+
+# if 'cloud-cover_quarterly_mean' in df.columns:
+#     df = df.drop(columns=['cloud-cover_quarterly_mean'])
 
 # Integration of graph code
-df['quarter_start'] = pd.to_datetime(df['quarter_start'])
-
-col1, col2 = st.columns(2)
+df_lc['quarter_start'] = pd.to_datetime(df_lc['quarter_start'])
+df_eco['quarter_start'] = pd.to_datetime(df_lc['quarter_start'])
 
 with st.container():
     st.markdown('<h2 style="font-size:24px;">Part I: Land Cover Proportion by Quarter</h2>', unsafe_allow_html=True)
     st.markdown("This section will display the change in land cover over time using images.")
 
-    # for year in range(2015, 2025):
-    #     st.markdown(f"### Year {year}")
-    #     st.image(f'path/to/your/image_{year}.png', caption=f'Land Cover in {year}', use_column_width=True)
 
 with st.container():
     st.markdown('<h2 style="font-size:24px;">Part II: Predictions of Change in Land Cover Proportions over time</h2>', unsafe_allow_html=True)
@@ -54,7 +57,7 @@ with st.container():
     quarters = {'Q1': '01-01', 'Q2': '04-01', 'Q3': '07-01', 'Q4': '10-01'}
 
     # Create dropdown for SITECODEs
-    sitecodes = df['SITECODE'].unique()
+    sitecodes = df_lc['SITECODE'].unique()
     selected_sitecode = st.selectbox(
         label='Sitecode:',
         options=sitecodes,
@@ -82,47 +85,9 @@ with st.container():
         'Built Area': '#FF0000',
         'Flooded Vegetation': '#00FF00'
     }
-#Import protected areas shapefile
-protected_areas = gpd.read_file("../raw_data/sample_protected_areas_624/protected_areas_624.shp")
-protected_areas_sample = protected_areas.iloc[[0]]
-
-# Create the Folium map
-def create_folium_map(gdf):
-    # Create a base map
-    m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=10)
-    # Add the shapefile to the map
-    folium.GeoJson(protected_areas_sample).add_to(m)
-    return m
-folium_map = create_folium_map(protected_areas_sample)
-# Display the Folium map in Streamlits
-st_folium(folium_map, width=700, height=500)
-
-
-# Upload CSV
-df = pd.read_csv('raw_data/Final_df_model_lc_2015_2024.csv')
-
-# Custom CSS for styling
-st.markdown("""
-    <style>
-    .main-title {
-        font-size: 2.5rem;
-        color: black;
-        text-align: center;
-        margin-bottom: 20px;
-        line-height: 2.5; /* Adjust line height */
-    } """)
-
-    #st.write(df.head())
-    #st.write(quarters.get(quarter_dropdown))
-
-    # Define function to update plot
-    # def update_df(sitecode, quarter):
-    #     filtered_pa_data = df[df['SITECODE'] == sitecode]
-    #     quarter_dates = filtered_pa_data[filtered_pa_data['date'].dt.strftime('%m-%d') == quarters.get(quarter_dropdown)]
-    #     return quarter_dates
 
 def update_df(sitecode, quarter):
-    filtered_pa_data = df[df['SITECODE'] == sitecode]
+    filtered_pa_data = df_lc[df_lc['SITECODE'] == sitecode]
     start_date = quarters[quarter]
     quarter_dates = filtered_pa_data[filtered_pa_data['quarter_start'].dt.strftime('%m-%d') == start_date]
     return quarter_dates
@@ -145,6 +110,7 @@ def update_plot(quarter_dates, sitecode, quarter):
 
     # Get colors for the categories from the color dictionary, falling back to default if not found
     colors = [color_dict.get(col, 'grey') for col in quarter_dates.columns if col not in ['quarter_start', 'SITECODE']]
+    #colors = [color_dict.get(col, 'grey') for col in quarter_dates.columns if col not in ['quarter_start', 'SITECODE', 'temperature_quarterly_mean', 'precipitation_quarterly_mean', 'water-vapor-pressure_quarterly_mean', 'cloud-cover_quarterly_mean']]
 
     quarter_dates.set_index('quarter_start').plot(kind='area', stacked=True, color=colors, alpha=0.8, ax=ax)
     ax.set_title(f'Land Cover Proportions Over the Years for {sitecode} - Quarter {quarter}', fontsize=16)
@@ -165,22 +131,36 @@ fig = update_plot(quarter_dates, selected_sitecode, quarter_dropdown)
 # Display the plot in Streamlit
 st.pyplot(fig)
 
-# with st.container():
-#     st.markdown('<h2 style="font-size:24px;">Addition: Change Over Time for Ecological Data</h2>', unsafe_allow_html=True)
+# Additional graphs for temperature, precipitation, water-vapor-pressure, and cloud-cover
+with st.container():
+    st.markdown('<h2 style="font-size:24px;">Part III: Change Over Time for Ecological Variables</h2>', unsafe_allow_html=True)
 
-#     # Additional variables to plot
-#     additional_variables = ['temperature_quaterly_mean', 'precipitation_quaterly_mean', 'water-vapor-pressure_quarterly_mean', 'cloud-cover_quarterly_mean']
 
-#     # Loop over additional variables and create individual plots
-#     for variable in additional_variables:
-#         fig_variable, ax_variable = plt.subplots(figsize=(16, 8))
-#         df.set_index('quarter_start')[variable].plot(ax=ax_variable)
-#         ax_variable.set_title(f'{variable.replace("_", " ").title()} Over Time', fontsize=14)
-#         ax_variable.set_xlabel('Year', fontsize=12)
-#         ax_variable.set_ylabel('Value', fontsize=12)
-#         ax_variable.tick_params(axis='x', labelsize=12)
-#         ax_variable.tick_params(axis='y', labelsize=12)
-#         st.pyplot(fig_variable)
+    # Additional variables to plot
+    additional_variables = ['temperature_quarterly_mean', 'precipitation_quarterly_mean', 'water-vapor-pressure_quarterly_mean', 'cloud-cover_quarterly_mean']
+
+    # Loop over additional variables and create individual plots
+# Loop over additional variables and create individual plots
+    for variable in additional_variables:
+        fig_variable, ax_variable = plt.subplots(figsize=(16, 8))
+
+        # Filter the data for the selected sitecode
+        sitecode_data = df_eco[df_eco['SITECODE'] == selected_sitecode]
+
+        # Filter the data for the selected quarter
+        quarter_data = sitecode_data[sitecode_data['quarter_start'].dt.quarter == int(quarter_dropdown[1])]
+
+        # Plot the data for the selected variable, sitecode, and quarter
+        quarter_data.plot(x='quarter_start', y=variable, ax=ax_variable, marker='o', linestyle='-')
+
+        ax_variable.set_title(f'{variable.replace("_", " ").title()} Over Time for Quarter {quarter_dropdown}', fontsize=14)
+        ax_variable.set_xlabel('Year', fontsize=12)
+        ax_variable.set_ylabel('Value', fontsize=12)
+        ax_variable.tick_params(axis='x', labelsize=12)
+        ax_variable.tick_params(axis='y', labelsize=12)
+
+        st.pyplot(fig_variable)
+
 
 # Add footer
 st.markdown("""

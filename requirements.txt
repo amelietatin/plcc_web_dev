@@ -7,3 +7,6 @@ pandas
 db-dtypes
 
 google-cloud-bigquery
+
+geopandas
+streamlit_folium
