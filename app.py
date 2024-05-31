@@ -1,11 +1,29 @@
 import streamlit as st
 import os
 import pandas as pd
+import geopandas as gpd
+import folium
+from streamlit_folium import st_folium
 
 
 
 # Page configuration
 st.set_page_config(page_title="Land Cover Changes Predictor", page_icon="🔍", layout="centered")
+
+#Import protected areas shapefile
+protected_areas = gpd.read_file("../raw_data/sample_protected_areas_624/protected_areas_624.shp")
+protected_areas_sample = protected_areas.iloc[[0]]
+
+# Create the Folium map
+def create_folium_map(gdf):
+    # Create a base map
+    m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=10)
+    # Add the shapefile to the map
+    folium.GeoJson(protected_areas_sample).add_to(m)
+    return m
+folium_map = create_folium_map(protected_areas_sample)
+# Display the Folium map in Streamlits
+st_folium(folium_map, width=700, height=500)
 
 
 # Upload CSV
