@@ -1,112 +1,157 @@
 import streamlit as st
 import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
 
 # Page configuration
-st.set_page_config(page_title="Land Cover Changes Predictor", page_icon="🔍", layout="centered")
+st.set_page_config(page_title="Land Cover Change Predictions", page_icon="🔍", layout="centered")
 
-# Custom CSS for styling
-st.markdown("""
-    <style>
-    .main-title {
-        font-size: 2.5rem;
-        color: black;
-        text-align: center;
-        margin-bottom: 20px;
-        line-height: 2.5; /* Adjust line height */
+# Load data
+#df = pd.read_csv('raw_data/pivot_pa_2015_2024.csv')
+df = pd.read_csv('raw_data/final_data_2015_2035.csv')
+
+# Drop 'Unnamed: 0' column if it exists (as I haad this problem before)
+if 'Unnamed: 0' in df.columns:
+    df = df.drop(columns=['Unnamed: 0'])
+
+if 'temperature_quarterly_mean' in df.columns:
+    df = df.drop(columns=['temperature_quarterly_mean'])
+
+if 'precipitation_quarterly_mean' in df.columns:
+    df = df.drop(columns=['precipitation_quarterly_mean'])
+
+if 'water-vapor-pressure_quarterly_mean' in df.columns:
+    df = df.drop(columns=['water-vapor-pressure_quarterly_mean'])
+
+if 'cloud-cover_quarterly_mean' in df.columns:
+    df = df.drop(columns=['cloud-cover_quarterly_mean'])
+
+# Integration of graph code
+df['quarter_start'] = pd.to_datetime(df['quarter_start'])
+
+col1, col2 = st.columns(2)
+
+with st.container():
+    st.markdown('<h2 style="font-size:24px;">Part I: Land Cover Proportion by Quarter</h2>', unsafe_allow_html=True)
+    st.markdown("This section will display the change in land cover over time using images.")
+
+    # for year in range(2015, 2025):
+    #     st.markdown(f"### Year {year}")
+    #     st.image(f'path/to/your/image_{year}.png', caption=f'Land Cover in {year}', use_column_width=True)
+
+with st.container():
+    st.markdown('<h2 style="font-size:24px;">Part II: Predictions of Change in Land Cover Proportions over time</h2>', unsafe_allow_html=True)
+    st.markdown("This section will display the predicted change over the next 10 years.")
+
+    # Define available quarters
+    quarters = {'Q1': '01-01', 'Q2': '04-01', 'Q3': '07-01', 'Q4': '10-01'}
+
+    # Create dropdown for SITECODEs
+    sitecodes = df['SITECODE'].unique()
+    selected_sitecode = st.selectbox(
+        label='Sitecode:',
+        options=sitecodes,
+        index=0,
+        help='Select a Sitecode',
+    )
+
+    # Create dropdown for quarters
+    quarter_dropdown = st.selectbox(
+        label='Quarter:',
+        options=list(quarters.keys()),
+        index=0,
+        help='Select a Quarter',
+    )
+
+    # Define color dictionary for land cover categories
+    color_dict = {
+        'Trees': '#228B22',
+        'Snow and Ice': '#B0E0E6',
+        'Water': '#1E90FF',
+        'Bare Ground': '#A9A9A9',
+        'Crops': '#FFD700',
+        'Grass': '#32CD32',
+        'Shrub and Scrub': '#8B4513',
+        'Built Area': '#FF0000',
+        'Flooded Vegetation': '#00FF00',
+        # Add other categories if needed
     }
-    .subtitle {
-        font-size: 1.5rem;
-        color: black;
-        text-align: center;
-        margin-bottom: 20px;
-        line-height: 2.5; /* Adjust line height */
-    }
-    .footer {
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        background-color: rgba(232, 234, 235, 0.8);
-        text-align: center;
-        padding: 10px;
-        font-size: 14px;
-        color: #333;
-    }
-    .success {
-        color: green;
-    }
-    .error {
-        color: red;
-    }
-    .stButton button {
-        background-color: #4A90E2;
-        color: white;
-    }
-    .centered-button {
-        text-align: center;
-    }
-    </style>
-    """, unsafe_allow_html=True)
 
-# Title and subtitle
-st.markdown('<div class="main-title">Land Cover Changes Predictor 🔍</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Check Land Cover Status Between 2015 and 2024</div>', unsafe_allow_html=True)
+    #st.write(df.head())
+    #st.write(quarters.get(quarter_dropdown))
 
-# Sample list of existing IDs
-existing_ids = ["40A0", "91D0", "91E0", "91F0", "91U0", "1130", "1140", "1210", "6240", "6170"]
+    # Define function to update plot
+    # def update_df(sitecode, quarter):
+    #     filtered_pa_data = df[df['SITECODE'] == sitecode]
+    #     quarter_dates = filtered_pa_data[filtered_pa_data['date'].dt.strftime('%m-%d') == quarters.get(quarter_dropdown)]
+    #     return quarter_dates
 
-# Text input for ID search
-user_input = st.text_input("Enter the protected area's ID and press Enter:")
+    def update_df(sitecode, quarter):
+        filtered_pa_data = df[df['SITECODE'] == sitecode]
+        start_date = quarters[quarter]
+        quarter_dates = filtered_pa_data[filtered_pa_data['quarter_start'].dt.strftime('%m-%d') == start_date]
+        return quarter_dates
 
-# Check if the input ID is in the list
-if user_input:
-    if user_input in existing_ids:
-        st.markdown(f"<span class='success'>ID {user_input} found!</span>", unsafe_allow_html=True)
-    else:
-        st.markdown(f"<span class='error'>Error: ID {user_input} not found.</span>", unsafe_allow_html=True)
+    #st.write(update_df(selected_sitecode, quarter_dropdown))
 
-# Year selection slider
-year = st.slider("Select Year", 2015, 2024, 2015)
+    quarter_dates = update_df(selected_sitecode, quarter_dropdown)
 
-# Display map for the selected ID and year if the ID is valid
-if user_input and user_input in existing_ids:
-    # Assuming you have map images stored in a folder named 'maps'
-    # with filenames formatted as 'ID_Year.png' (e.g., '40A0_2015.png')
-    map_filename = f"maps/{user_input}_{year}.png"
+    #st.write("Filtered Data:")
+    #st.write(quarter_dates)
 
-    if os.path.exists(map_filename):
-        st.image(map_filename, caption=f"Land Cover Map for {user_input} in {year}", use_column_width=True)
-    else:
-        st.markdown(f"<span class='error'>Map not found for ID {user_input} in {year}.</span>", unsafe_allow_html=True)
+    # change negative values for lc proportions to 0
+    quarter_dates.iloc[:, 3:] = quarter_dates.iloc[:, 3:].clip(lower=0)
 
-st.markdown('<div class="subtitle">Predict The Status of The Land Cover in The Future</div>', unsafe_allow_html=True)
+    def update_plot(quarter_dates, sitecode, quarter):
+        fig, ax = plt.subplots(figsize=(16, 8))
 
-# Form for year, temperature, and precipitation inputs
-with st.form(key='prediction_form'):
-    st.markdown('<div class="subtitle">Enter Prediction Parameters</div>', unsafe_allow_html=True)
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        pred_year = st.text_input("Year")
-    with col2:
-        temperature = st.text_input("Temperature (°C)")
-    with col3:
-        precipitation = st.text_input("Precipitation (mm)")
+        # Set the Seaborn style
+        sns.set(style="whitegrid")
 
-    # Center the submit button
-    st.markdown('<div class="centered-button">', unsafe_allow_html=True)
-    submit_button = st.form_submit_button(label='Submit')
-    st.markdown('</div>', unsafe_allow_html=True)
+        # Get colors for the categories from the color dictionary, falling back to default if not found
+        colors = [color_dict.get(col, 'grey') for col in quarter_dates.columns if col not in ['quarter_start', 'SITECODE']]
 
-# Display prediction result after form submission
-if submit_button:
-    if pred_year and temperature and precipitation:
-        st.markdown(f"### Here is the predicted status of land cover in {pred_year} with the given temperature ({temperature}°C) and precipitation ({precipitation} mm).")
-    else:
-        st.markdown(f"<span class='error'>Please fill in all the fields.</span>", unsafe_allow_html=True)
+        quarter_dates.set_index('quarter_start').plot(kind='area', stacked=True, color=colors, alpha=0.8, ax=ax)
+        ax.set_title(f'Land Cover Proportions Over the Years for {sitecode} - Quarter {quarter}', fontsize=16)
+        ax.set_xlabel('Year', fontsize=12)
+        ax.set_ylabel('Proportion', fontsize=12)
+        ax.tick_params(axis='x', labelsize=12)
+        ax.tick_params(axis='y', labelsize=12)
+        ax.legend(title='Land Cover Category', bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10, title_fontsize='12')
+        ax.grid(False)
+
+        ax.axvline(pd.to_datetime('2025-01-01'), color='r', linestyle='--')
+
+        # Return the Matplotlib figure object
+        return fig
+
+    fig = update_plot(quarter_dates, selected_sitecode, quarter_dropdown)
+
+    # Display the plot in Streamlit
+    st.pyplot(fig)
+
+# with st.container():
+#     st.markdown('<h2 style="font-size:24px;">Addition: Change Over Time for Ecological Data</h2>', unsafe_allow_html=True)
+
+#     # Additional variables to plot
+#     additional_variables = ['temperature_quaterly_mean', 'precipitation_quaterly_mean', 'water-vapor-pressure_quarterly_mean', 'cloud-cover_quarterly_mean']
+
+#     # Loop over additional variables and create individual plots
+#     for variable in additional_variables:
+#         fig_variable, ax_variable = plt.subplots(figsize=(16, 8))
+#         df.set_index('quarter_start')[variable].plot(ax=ax_variable)
+#         ax_variable.set_title(f'{variable.replace("_", " ").title()} Over Time', fontsize=14)
+#         ax_variable.set_xlabel('Year', fontsize=12)
+#         ax_variable.set_ylabel('Value', fontsize=12)
+#         ax_variable.tick_params(axis='x', labelsize=12)
+#         ax_variable.tick_params(axis='y', labelsize=12)
+#         st.pyplot(fig_variable)
 
 # Add footer
 st.markdown("""
     <div class="footer">
-        Created with ❤️ by Amélie, Tim, Florentine, and Ali
+        Created with ❤️ by Amélie, Tim, Flori, and Ali
     </div>
     """, unsafe_allow_html=True)
