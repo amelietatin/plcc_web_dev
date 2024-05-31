@@ -4,6 +4,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import geopandas as gpd
+import folium
+from streamlit_folium import st_folium
+
+
 
 # Page configuration
 st.set_page_config(page_title="Land Cover Change Predictions", page_icon="🔍", layout="centered")
@@ -75,9 +80,37 @@ with st.container():
         'Grass': '#32CD32',
         'Shrub and Scrub': '#8B4513',
         'Built Area': '#FF0000',
-        'Flooded Vegetation': '#00FF00',
-        # Add other categories if needed
+        'Flooded Vegetation': '#00FF00'
     }
+#Import protected areas shapefile
+protected_areas = gpd.read_file("../raw_data/sample_protected_areas_624/protected_areas_624.shp")
+protected_areas_sample = protected_areas.iloc[[0]]
+
+# Create the Folium map
+def create_folium_map(gdf):
+    # Create a base map
+    m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=10)
+    # Add the shapefile to the map
+    folium.GeoJson(protected_areas_sample).add_to(m)
+    return m
+folium_map = create_folium_map(protected_areas_sample)
+# Display the Folium map in Streamlits
+st_folium(folium_map, width=700, height=500)
+
+
+# Upload CSV
+df = pd.read_csv('raw_data/Final_df_model_lc_2015_2024.csv')
+
+# Custom CSS for styling
+st.markdown("""
+    <style>
+    .main-title {
+        font-size: 2.5rem;
+        color: black;
+        text-align: center;
+        margin-bottom: 20px;
+        line-height: 2.5; /* Adjust line height */
+    } """)
 
     #st.write(df.head())
     #st.write(quarters.get(quarter_dropdown))
@@ -88,49 +121,49 @@ with st.container():
     #     quarter_dates = filtered_pa_data[filtered_pa_data['date'].dt.strftime('%m-%d') == quarters.get(quarter_dropdown)]
     #     return quarter_dates
 
-    def update_df(sitecode, quarter):
-        filtered_pa_data = df[df['SITECODE'] == sitecode]
-        start_date = quarters[quarter]
-        quarter_dates = filtered_pa_data[filtered_pa_data['quarter_start'].dt.strftime('%m-%d') == start_date]
-        return quarter_dates
+def update_df(sitecode, quarter):
+    filtered_pa_data = df[df['SITECODE'] == sitecode]
+    start_date = quarters[quarter]
+    quarter_dates = filtered_pa_data[filtered_pa_data['quarter_start'].dt.strftime('%m-%d') == start_date]
+    return quarter_dates
 
-    #st.write(update_df(selected_sitecode, quarter_dropdown))
+#st.write(update_df(selected_sitecode, quarter_dropdown))
 
-    quarter_dates = update_df(selected_sitecode, quarter_dropdown)
+quarter_dates = update_df(selected_sitecode, quarter_dropdown)
 
-    #st.write("Filtered Data:")
-    #st.write(quarter_dates)
+#st.write("Filtered Data:")
+#st.write(quarter_dates)
 
-    # change negative values for lc proportions to 0
-    quarter_dates.iloc[:, 3:] = quarter_dates.iloc[:, 3:].clip(lower=0)
+# change negative values for lc proportions to 0
+quarter_dates.iloc[:, 3:] = quarter_dates.iloc[:, 3:].clip(lower=0)
 
-    def update_plot(quarter_dates, sitecode, quarter):
-        fig, ax = plt.subplots(figsize=(16, 8))
+def update_plot(quarter_dates, sitecode, quarter):
+    fig, ax = plt.subplots(figsize=(16, 8))
 
-        # Set the Seaborn style
-        sns.set(style="whitegrid")
+    # Set the Seaborn style
+    sns.set(style="whitegrid")
 
-        # Get colors for the categories from the color dictionary, falling back to default if not found
-        colors = [color_dict.get(col, 'grey') for col in quarter_dates.columns if col not in ['quarter_start', 'SITECODE']]
+    # Get colors for the categories from the color dictionary, falling back to default if not found
+    colors = [color_dict.get(col, 'grey') for col in quarter_dates.columns if col not in ['quarter_start', 'SITECODE']]
 
-        quarter_dates.set_index('quarter_start').plot(kind='area', stacked=True, color=colors, alpha=0.8, ax=ax)
-        ax.set_title(f'Land Cover Proportions Over the Years for {sitecode} - Quarter {quarter}', fontsize=16)
-        ax.set_xlabel('Year', fontsize=12)
-        ax.set_ylabel('Proportion', fontsize=12)
-        ax.tick_params(axis='x', labelsize=12)
-        ax.tick_params(axis='y', labelsize=12)
-        ax.legend(title='Land Cover Category', bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10, title_fontsize='12')
-        ax.grid(False)
+    quarter_dates.set_index('quarter_start').plot(kind='area', stacked=True, color=colors, alpha=0.8, ax=ax)
+    ax.set_title(f'Land Cover Proportions Over the Years for {sitecode} - Quarter {quarter}', fontsize=16)
+    ax.set_xlabel('Year', fontsize=12)
+    ax.set_ylabel('Proportion', fontsize=12)
+    ax.tick_params(axis='x', labelsize=12)
+    ax.tick_params(axis='y', labelsize=12)
+    ax.legend(title='Land Cover Category', bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10, title_fontsize='12')
+    ax.grid(False)
 
-        ax.axvline(pd.to_datetime('2025-01-01'), color='r', linestyle='--')
+    ax.axvline(pd.to_datetime('2025-01-01'), color='r', linestyle='--')
 
-        # Return the Matplotlib figure object
-        return fig
+    # Return the Matplotlib figure object
+    return fig
 
-    fig = update_plot(quarter_dates, selected_sitecode, quarter_dropdown)
+fig = update_plot(quarter_dates, selected_sitecode, quarter_dropdown)
 
-    # Display the plot in Streamlit
-    st.pyplot(fig)
+# Display the plot in Streamlit
+st.pyplot(fig)
 
 # with st.container():
 #     st.markdown('<h2 style="font-size:24px;">Addition: Change Over Time for Ecological Data</h2>', unsafe_allow_html=True)
