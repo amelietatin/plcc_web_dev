@@ -1,8 +1,15 @@
 import streamlit as st
 import os
+import pandas as pd
+
+
 
 # Page configuration
 st.set_page_config(page_title="Land Cover Changes Predictor", page_icon="🔍", layout="centered")
+
+
+# Upload CSV
+df = pd.read_csv('raw_data/Final_df_model_lc_2015_2024.csv')
 
 # Custom CSS for styling
 st.markdown("""
