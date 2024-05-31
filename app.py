@@ -26,6 +26,9 @@ folium_map = create_folium_map(protected_areas_sample)
 st_folium(folium_map, width=700, height=500)
 
 
+# Upload CSV
+df = pd.read_csv('raw_data/Final_df_model_lc_2015_2024.csv')
+
 # Custom CSS for styling
 st.markdown("""
     <style>

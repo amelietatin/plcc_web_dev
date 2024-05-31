@@ -1,5 +1,9 @@
+run_api:
+	uvicorn api.main:app --reload --port 8000
 
-default: pytest
+bq_reset:
+	-bq rm --project_id ${GCP_PROJECT} ${BQ_DATASET}.${TABLE}
+	-bq mk --sync --project_id ${GCP_PROJECT} --location=${BQ_REGION} ${BQ_DATASET}.${TABLE}
 
 # default: pylint pytest
 
