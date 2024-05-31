@@ -7,7 +7,7 @@ app = FastAPI()
 
 # Load CSV data
 df = pd.read_csv('api/final_data_2015_2035.csv')
-load_data_to_bq(df, GCP_PROJECT, BQ_DATASET, TABLE, True)
+#load_data_to_bq(df, GCP_PROJECT, BQ_DATASET, TABLE, True)
 
 query = f"""
         SELECT *

@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import pandas as pd
-
+import requests
 
 
 # Page configuration
@@ -9,7 +9,14 @@ st.set_page_config(page_title="Land Cover Changes Predictor", page_icon="🔍", 
 
 
 # Upload CSV
-df = pd.read_csv('raw_data/Final_df_model_lc_2015_2024.csv')
+#df = pd.read_csv('api/final_data_2015_2035.csv')
+
+
+#Get data from API
+url_base='https://landcoverapi-f37abimraq-ew.a.run.app/'
+response = requests.get(url=url_base+'/data').json()
+df = pd.DataFrame(response)
+
 
 # Custom CSS for styling
 st.markdown("""
