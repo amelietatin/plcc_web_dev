@@ -32,12 +32,14 @@ date_range_df = pd.read_csv('raw_data/date_ranges.csv', sep=',')
 pa_sample = gpd.read_file("raw_data/sample_protected_areas_624/protected_areas_624.shp")
 
 # GEE SERVICE ACCOUNT
+## GEE SERVICE ACCOUNT
 service_account = 'project-lc@lewagon-lc-amelietatin.iam.gserviceaccount.com'
 credentials = ee.ServiceAccountCredentials(service_account, './key.json')
 ee.Initialize(credentials)
 
 #Import protected areas GEE asset
 shapefile = ee.FeatureCollection("projects/lewagon-lc-amelietatin/assets/sample_protected_areas_624")
+
 
 
 #############################################################################################################################################
@@ -73,7 +75,6 @@ quarter_dropdown = st.selectbox(
     help='Select a Quarter',
     )
 
-st.write(quarter_dropdown)
 #############################################################################################################################################
 #############################################################################################################################################
 # AMELIE

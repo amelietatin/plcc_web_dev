@@ -4,7 +4,8 @@ import pandas as pd
 from google.cloud import bigquery
 from colorama import Fore, Style
 from pathlib import Path
-
+from google.cloud import bigquery
+from google.oauth2 import service_account
 from api.params import *
 
 def get_data(
@@ -16,9 +17,9 @@ def get_data(
     Retrieve `query` data from BigQuery, or from `cache_path` if the file exists
     Store at `cache_path` if retrieved from BigQuery for future use
     """
-
+    credentials = service_account.Credentials.from_service_account_file(GOOGLE_APP)
     print(Fore.BLUE + "\nLoad data from BigQuery server..." + Style.RESET_ALL)
-    client = bigquery.Client(project=gcp_project)
+    client = bigquery.Client(project=gcp_project,credentials=credentials)
     query_job = client.query(query)
     result = query_job.result()
     df = result.to_dataframe()
@@ -75,6 +76,7 @@ def load_data_to_bq(
 if __name__ == '__main__':
     df = pd.read_csv('api/final_data_2015_2035.csv')
     load_data_to_bq(df, GCP_PROJECT, BQ_DATASET, TABLE, True)
+    # python api/data.py
 
     # query = f"""
     #     SELECT *
