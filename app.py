@@ -2,6 +2,9 @@ import streamlit as st
 import os
 import pandas as pd
 import requests
+import geopandas as gpd
+import folium
+from streamlit_folium import st_folium
 
 
 # Page configuration
