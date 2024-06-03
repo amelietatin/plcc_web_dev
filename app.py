@@ -31,6 +31,7 @@ date_range_df = pd.read_csv('raw_data/date_ranges.csv', sep=',')
 #pa shapefile
 pa_sample = gpd.read_file("raw_data/sample_protected_areas_624/protected_areas_624.shp")
 
+# GEE SERVICE ACCOUNT
 ## GEE SERVICE ACCOUNT
 service_account = 'project-lc@lewagon-lc-amelietatin.iam.gserviceaccount.com'
 credentials = ee.ServiceAccountCredentials(service_account, './key.json')

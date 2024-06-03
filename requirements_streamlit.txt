@@ -7,4 +7,10 @@ pandas
 db-dtypes
 
 google-cloud-bigquery
+<<<<<<< HEAD:requirements.txt
+
+geopandas
+streamlit_folium
+=======
 colorama
+>>>>>>> 0e08e10b96c3576128976d700f9bfb02af093261:requirements_streamlit.txt
