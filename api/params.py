@@ -15,6 +15,7 @@ INSTANCE = os.environ.get("INSTANCE")
 EVALUATION_START_DATE = os.environ.get("EVALUATION_START_DATE")
 GAR_IMAGE = os.environ.get("GAR_IMAGE")
 GAR_MEMORY = os.environ.get("GAR_MEMORY")
+GOOGLE_APP=os.environ.get("GOOGLE_APP")
 
 ##################  CONSTANTS  #####################
 #LOCAL_DATA_PATH = os.path.join(os.path.expanduser('~'), ".lewagon", "mlops", "data")

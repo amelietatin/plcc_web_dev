@@ -11,4 +11,5 @@ COPY . .
 RUN pip install -r requirements.txt
 RUN pip install .
 # Run uvicorn server for FastAPI
-RUN uvicorn api.main:app --host 0.0.0.0 --port $PORT
+
+CMD uvicorn api.main:app --host 0.0.0.0 --port $PORT
