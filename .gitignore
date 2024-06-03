@@ -53,5 +53,7 @@ mlruns
 # Challengify - test challengification files
 *_challengify*
 
+#GEE key
+key.json
 
 le-wagnon-data-and-ml-cba2613dcc9f.json

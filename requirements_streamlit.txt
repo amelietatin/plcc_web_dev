@@ -1,0 +1,10 @@
+streamlit
+uvicorn
+fastapi
+
+
+pandas
+db-dtypes
+
+google-cloud-bigquery
+colorama
