@@ -6,7 +6,6 @@ from streamlit_folium import st_folium
 import ee
 import geemap.foliumap as geemap
 import geopandas as gpd
-from io import StringIO
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -55,21 +54,48 @@ df = load_data()
 date_range_df = load_date_range()
 pa_sample = load_pa_shapefile()
 shapefile = load_gee_shapefile()
+# PAs infos
+bioregion = pd.read_csv('raw_data/pa_infos_csv/new_csvs/bioregion.csv', sep=',')
+impact_management = pd.read_csv('raw_data/pa_infos_csv/new_csvs/impact_management.csv', sep=',')
+species = pd.read_csv('raw_data/pa_infos_csv/new_csvs/species.csv', sep=',')
+habitat_class = pd.read_csv('raw_data/pa_infos_csv/new_csvs/habitat_class.csv', sep=',')
 
 #############################################################################################################################################
 #############################################################################################################################################
 ##SIDEBAR
 st.sidebar.header("User Input Parameters")
 
-## DROPDOWNS
-#SITECODES
-sitecodes = df['SITECODE'].unique()
+#BIOREGION
+bioregion_sitecode = bioregion[bioregion['SITECODE'].isin(df['SITECODE'])]
+bioregions = bioregion_sitecode['BIOREGION'].unique()
+selected_bioregions = st.sidebar.selectbox(
+    label='Bioregion:',
+    options=bioregions,
+    index=0,
+    help='Select a Bioregion',
+)
+
+bioregion_sample = bioregion_sitecode[(bioregion_sitecode['BIOREGION'] == selected_bioregions)]
+#COUNTRY
+countries = bioregion_sample.COUNTRY_NAME.unique()
 selected_sitecode = st.sidebar.selectbox(
-    label='Sitecode:',
+    label='Country:',
+    options=countries,
+    index=0,
+    help='Select a Country',
+)
+
+
+#SITECODES NAMES FOR DROPDOWN
+sitecodes = bioregion_sample.SITENAME.unique()
+selected_sitecode = st.sidebar.selectbox(
+    label='Protected Area:',
     options=sitecodes,
     index=0,
-    help='Select a Sitecode',
+    help='Select a Protected Area',
 )
+
+selected_sitecode = bioregion_sample[(bioregion_sample['SITENAME'] == selected_sitecode)]['SITECODE'].values[0]
 
 #YEARS
 years = date_range_df['Year'].unique()
