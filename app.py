@@ -5,9 +5,9 @@ import pandas as pd
 import folium
 from streamlit_folium import st_folium
 import ee
-import geemap.geemap as geemap
+#import geemap.geemap as geemap
+import geemap.foliumap as geemap
 import geopandas as gpd
-from io import StringIO
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -41,23 +41,51 @@ ee.Initialize(credentials)
 shapefile = ee.FeatureCollection("projects/lewagon-lc-amelietatin/assets/sample_protected_areas_624")
 
 
+# PAs infos
+bioregion = pd.read_csv('raw_data/pa_infos_csv/new_csvs/bioregion.csv', sep=',')
+impact_management = pd.read_csv('raw_data/pa_infos_csv/new_csvs/impact_management.csv', sep=',')
+species = pd.read_csv('raw_data/pa_infos_csv/new_csvs/species.csv', sep=',')
+habitat_class = pd.read_csv('raw_data/pa_infos_csv/new_csvs/habitat_class.csv', sep=',')
 
 #############################################################################################################################################
 #############################################################################################################################################
 # DROPDOWNS
 
-#SITECODES
-sitecodes = pa_sample['SITECODE'].unique()
-selected_sitecode = st.selectbox(
-    label='Sitecode:',
+#BIOREGION
+bioregion_sitecode = bioregion[bioregion['SITECODE'].isin(df['SITECODE'])]
+bioregions = bioregion_sitecode['BIOREGION'].unique()
+selected_bioregions = st.sidebar.selectbox(
+    label='Bioregion:',
+    options=bioregions,
+    index=0,
+    help='Select a Bioregion',
+)
+
+bioregion_sample = bioregion_sitecode[(bioregion_sitecode['BIOREGION'] == selected_bioregions)]
+#COUNTRY
+countries = bioregion_sample.COUNTRY_NAME.unique()
+selected_sitecode = st.sidebar.selectbox(
+    label='Country:',
+    options=countries,
+    index=0,
+    help='Select a Country',
+)
+
+
+#SITECODES NAMES FOR DROPDOWN
+sitecodes = bioregion_sample.SITENAME.unique()
+selected_sitecode = st.sidebar.selectbox(
+    label='Protected Area:',
     options=sitecodes,
     index=0,
-    help='Select a Sitecode',
+    help='Select a Protected Area',
 )
+
+selected_sitecode = bioregion_sample[(bioregion_sample['SITENAME'] == selected_sitecode)]['SITECODE'].values[0]
 
 #YEARS
 years = date_range_df['Year'].unique()
-selected_year = st.selectbox(
+selected_year = st.sidebar.selectbox(
         label='Year:',
         options=list(years),
         index=0,
@@ -66,12 +94,12 @@ selected_year = st.selectbox(
 
 #QUARTERS
 quarters = {'Q1': '01-01', 'Q2': '04-01', 'Q3': '07-01', 'Q4': '10-01'}
-#quarters = date_range_df['Quartal'].unique()
+default_ix = list(quarters.keys()).index('Q3')
 #Create dropdown for quarters
-quarter_dropdown = st.selectbox(
+quarter_dropdown = st.sidebar.selectbox(
     label='Quarter:',
     options=list(quarters.keys()),
-    index=0,
+    index=default_ix,
     help='Select a Quarter',
     )
 
