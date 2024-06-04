@@ -20,45 +20,53 @@ st.set_page_config(page_title="Land Cover Change Predictions", page_icon="🌍",
 #############################################################################################################################################
 # DATA
 
-# Load data
-@st.cache_data
-def load_data():
-    df = pd.read_csv('raw_data/final_data_2015_2035.csv')
-    return df
+DATA_SOURCE = 'api'
 
-# Timerange
-@st.cache_data
-def load_date_range():
-    date_range_df = pd.read_csv('raw_data/date_ranges.csv', sep=',')
-    return date_range_df
+if DATA_SOURCE == 'api':
+    table_names = ['final_df','bioregion', 'habitat_class', 'impact_management','species', 'date_ranges', 'protected_areas_shp']
+    url=
+    requests.get
 
-#pa shapefile
-@st.cache_data
-def load_pa_shapefile():
-    pa_sample = gpd.read_file("raw_data/sample_protected_areas_624/protected_areas_624.shp")
-    return pa_sample
+if DATA_SOURCE == 'local':
+    # Load data
+    @st.cache_data
+    def load_data():
+        df = pd.read_csv('raw_data/final_data_2015_2035.csv')
+        return df
 
-# GEE SERVICE ACCOUNT
-## GEE SERVICE ACCOUNT
-@st.cache_data
-def load_gee_shapefile():
-    service_account = 'project-lc@lewagon-lc-amelietatin.iam.gserviceaccount.com'
-    credentials = ee.ServiceAccountCredentials(service_account, './key.json')
-    ee.Initialize(credentials)
+    # Timerange
+    @st.cache_data
+    def load_date_range():
+        date_range_df = pd.read_csv('raw_data/date_ranges.csv', sep=',')
+        return date_range_df
 
-    #Import protected areas GEE asset
-    shapefile = ee.FeatureCollection("projects/lewagon-lc-amelietatin/assets/sample_protected_areas_624")
-    return shapefile
+    #pa shapefile
+    @st.cache_data
+    def load_pa_shapefile():
+        pa_sample = gpd.read_file("raw_data/sample_protected_areas_624/protected_areas_624.shp")
+        return pa_sample
 
-df = load_data()
-date_range_df = load_date_range()
-pa_sample = load_pa_shapefile()
-shapefile = load_gee_shapefile()
-# PAs infos
-bioregion = pd.read_csv('raw_data/pa_infos_csv/new_csvs/bioregion.csv', sep=',')
-impact_management = pd.read_csv('raw_data/pa_infos_csv/new_csvs/impact_management.csv', sep=',')
-species = pd.read_csv('raw_data/pa_infos_csv/new_csvs/species.csv', sep=',')
-habitat_class = pd.read_csv('raw_data/pa_infos_csv/new_csvs/habitat_class.csv', sep=',')
+    # GEE SERVICE ACCOUNT
+    ## GEE SERVICE ACCOUNT
+    @st.cache_data
+    def load_gee_shapefile():
+        service_account = 'project-lc@lewagon-lc-amelietatin.iam.gserviceaccount.com'
+        credentials = ee.ServiceAccountCredentials(service_account, './key.json')
+        ee.Initialize(credentials)
+
+        #Import protected areas GEE asset
+        shapefile = ee.FeatureCollection("projects/lewagon-lc-amelietatin/assets/sample_protected_areas_624")
+        return shapefile
+
+    df = load_data()
+    date_range_df = load_date_range()
+    pa_sample = load_pa_shapefile()
+    shapefile = load_gee_shapefile()
+    # PAs infos
+    bioregion = pd.read_csv('raw_data/pa_infos_csv/new_csvs/bioregion.csv', sep=',')
+    impact_management = pd.read_csv('raw_data/pa_infos_csv/new_csvs/impact_management.csv', sep=',')
+    species = pd.read_csv('raw_data/pa_infos_csv/new_csvs/species.csv', sep=',')
+    habitat_class = pd.read_csv('raw_data/pa_infos_csv/new_csvs/habitat_class.csv', sep=',')
 
 #############################################################################################################################################
 #############################################################################################################################################
