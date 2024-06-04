@@ -2,8 +2,14 @@ run_api:
 	uvicorn api.main:app --reload --port 8000
 
 bq_reset:
-	-bq rm --project_id ${GCP_PROJECT} ${BQ_DATASET}.${TABLE}
-	-bq mk --sync --project_id ${GCP_PROJECT} --location=${BQ_REGION} ${BQ_DATASET}.${TABLE}
+	-bq rm --project_id ${GCP_PROJECT} ${BQ_DATASET}.land_cover
+	-bq mk --sync --project_id ${GCP_PROJECT} --location=${BQ_REGION} ${BQ_DATASET}.final_df
+	-bq mk --sync --project_id ${GCP_PROJECT} --location=${BQ_REGION} ${BQ_DATASET}.bioregion
+	-bq mk --sync --project_id ${GCP_PROJECT} --location=${BQ_REGION} ${BQ_DATASET}.habitat_class
+	-bq mk --sync --project_id ${GCP_PROJECT} --location=${BQ_REGION} ${BQ_DATASET}.impact_management
+	-bq mk --sync --project_id ${GCP_PROJECT} --location=${BQ_REGION} ${BQ_DATASET}.species
+	-bq mk --sync --project_id ${GCP_PROJECT} --location=${BQ_REGION} ${BQ_DATASET}.date_ranges
+	-bq mk --sync --project_id ${GCP_PROJECT} --location=${BQ_REGION} ${BQ_DATASET}.protected_areas_shp
 
 build:
 	docker build . -t api
