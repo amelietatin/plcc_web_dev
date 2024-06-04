@@ -1,11 +1,9 @@
-
 from io import StringIO ## for Python 3
 import streamlit as st
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
 import ee
-#import geemap.geemap as geemap
 import geemap.foliumap as geemap
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -16,31 +14,46 @@ import geopandas as gpd
 import requests
 
 # Page configuration
-st.set_page_config(page_title="Land Cover Change Predictions", page_icon="🔍", layout="centered")
+st.set_page_config(page_title="Land Cover Change Predictions", page_icon="🌍", layout="wide")
 
 #############################################################################################################################################
 #############################################################################################################################################
 # DATA
 
 # Load data
-df = pd.read_csv('raw_data/final_data_2015_2035.csv')
+@st.cache_data
+def load_data():
+    df = pd.read_csv('raw_data/final_data_2015_2035.csv')
+    return df
 
 # Timerange
-date_range_df = pd.read_csv('raw_data/date_ranges.csv', sep=',')
+@st.cache_data
+def load_date_range():
+    date_range_df = pd.read_csv('raw_data/date_ranges.csv', sep=',')
+    return date_range_df
 
 #pa shapefile
-pa_sample = gpd.read_file("raw_data/sample_protected_areas_624/protected_areas_624.shp")
+@st.cache_data
+def load_pa_shapefile():
+    pa_sample = gpd.read_file("raw_data/sample_protected_areas_624/protected_areas_624.shp")
+    return pa_sample
 
 # GEE SERVICE ACCOUNT
 ## GEE SERVICE ACCOUNT
-service_account = 'project-lc@lewagon-lc-amelietatin.iam.gserviceaccount.com'
-credentials = ee.ServiceAccountCredentials(service_account, './key.json')
-ee.Initialize(credentials)
+@st.cache_data
+def load_gee_shapefile():
+    service_account = 'project-lc@lewagon-lc-amelietatin.iam.gserviceaccount.com'
+    credentials = ee.ServiceAccountCredentials(service_account, './key.json')
+    ee.Initialize(credentials)
 
-#Import protected areas GEE asset
-shapefile = ee.FeatureCollection("projects/lewagon-lc-amelietatin/assets/sample_protected_areas_624")
+    #Import protected areas GEE asset
+    shapefile = ee.FeatureCollection("projects/lewagon-lc-amelietatin/assets/sample_protected_areas_624")
+    return shapefile
 
-
+df = load_data()
+date_range_df = load_date_range()
+pa_sample = load_pa_shapefile()
+shapefile = load_gee_shapefile()
 # PAs infos
 bioregion = pd.read_csv('raw_data/pa_infos_csv/new_csvs/bioregion.csv', sep=',')
 impact_management = pd.read_csv('raw_data/pa_infos_csv/new_csvs/impact_management.csv', sep=',')
@@ -49,7 +62,8 @@ habitat_class = pd.read_csv('raw_data/pa_infos_csv/new_csvs/habitat_class.csv', 
 
 #############################################################################################################################################
 #############################################################################################################################################
-# DROPDOWNS
+##SIDEBAR
+st.sidebar.header("User Input Parameters")
 
 #BIOREGION
 bioregion_sitecode = bioregion[bioregion['SITECODE'].isin(df['SITECODE'])]
@@ -85,10 +99,9 @@ selected_sitecode = bioregion_sample[(bioregion_sample['SITENAME'] == selected_s
 
 #YEARS
 years = date_range_df['Year'].unique()
-selected_year = st.sidebar.selectbox(
+selected_year = st.sidebar.select_slider(
         label='Year:',
         options=list(years),
-        index=0,
         help='Select a Year',
 )
 
@@ -96,12 +109,46 @@ selected_year = st.sidebar.selectbox(
 quarters = {'Q1': '01-01', 'Q2': '04-01', 'Q3': '07-01', 'Q4': '10-01'}
 default_ix = list(quarters.keys()).index('Q3')
 #Create dropdown for quarters
-quarter_dropdown = st.sidebar.selectbox(
+quarter_dropdown = st.sidebar.radio(
     label='Quarter:',
     options=list(quarters.keys()),
     index=default_ix,
     help='Select a Quarter',
     )
+
+# Define legend on sidebar
+legend_html = """
+<div style='padding: 10px; background-color: #f4f4f4; border: 1px solid #ddd; margin-top: 20px;'>
+    <h4>Legend</h4>
+    <ul style='list-style-type: none; padding: 0;'>
+        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #419bdf; margin-right: 10px;'></span>Water</li>
+        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #397d49; margin-right: 10px;'></span>Trees</li>
+        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #88b053; margin-right: 10px;'></span>Grass</li>
+        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #7a87c6; margin-right: 10px;'></span>Flooded Vegetation</li>
+        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #e49635; margin-right: 10px;'></span>Crops</li>
+        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #dfc35a; margin-right: 10px;'></span>Shrub and Scrub</li>
+        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #c4281b; margin-right: 10px;'></span>Built</li>
+        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #a59b8f; margin-right: 10px;'></span>Bare</li>
+        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #b39fe1; margin-right: 10px;'></span>Snow and Ice</li>
+    </ul>
+</div>
+"""
+quarter_html = """
+<div style='padding: 10px; background-color: #f4f4f4; border: 1px solid #ddd; margin-top: 20px;'>
+    <h4>Quarter range</h4>
+    <ul style='list-style-type: none; padding: 0;'>
+        <li><width: 20px; height: 20px; background-color: #f4f4f4; margin-right: 10px;'></span>Q1: Jan-Mar</li>
+        <li><width: 20px; height: 20px; background-color: #f4f4f4; margin-right: 10px;'></span>Q2: Apr-Jun</li>
+        <li><width: 20px; height: 20px; background-color: #f4f4f4; margin-right: 10px;'></span>Q3: Jul-Sep</li>
+        <li><width: 20px; height: 20px; background-color: #f4f4f4; margin-right: 10px;'></span>Q4: Oct-Dec</li>
+    </ul>
+</div>
+"""
+
+# Add legend to sidebar
+st.sidebar.markdown(quarter_html, unsafe_allow_html=True)
+st.sidebar.markdown(legend_html, unsafe_allow_html=True)
+
 
 #############################################################################################################################################
 #############################################################################################################################################
@@ -113,8 +160,14 @@ quarter_dropdown = st.sidebar.selectbox(
 start = date_range_df[(date_range_df['Quartal'] == quarter_dropdown) & (date_range_df['Year'] == selected_year)]['Start_Date'].values[0]
 end = date_range_df[(date_range_df['Quartal'] == quarter_dropdown) & (date_range_df['Year'] == selected_year)]['End_Date'].values[0]
 
+#############################################################################################################################################
+#############################################################################################################################################
+# Part I
+#############################################################################################################################################
+#############################################################################################################################################
+
 with st.container():
-    st.markdown('<h2 style="font-size:24px;">Part I: Land Cover Proportion by Quarter</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 style="font-size:24px;">Part I: Historical Land Cover Proportions</h2>', unsafe_allow_html=True)
     st.markdown("This section will display the change in land cover over time using images.")
 
     # Convert start and end dates to ee.Date
@@ -215,9 +268,16 @@ df_lc['quarter_start'] = pd.to_datetime(df_lc['quarter_start'])
 df_eco['quarter_start'] = pd.to_datetime(df_lc['quarter_start'])
 
 
+#############################################################################################################################################
+#############################################################################################################################################
+# Part II
+#############################################################################################################################################
+#############################################################################################################################################
+
+
 with st.container():
-    st.markdown('<h2 style="font-size:24px;">Part II: Predictions of Change in Land Cover Proportions over time</h2>', unsafe_allow_html=True)
-    st.markdown("This section will display the predicted change over the next 10 years.")
+    st.markdown('<h2 style="font-size:24px;">Part II: Predictions of Change in Land Cover Proportions over Time</h2>', unsafe_allow_html=True)
+    st.markdown("This section will display the historical evolution and predicted change over the next 10 years.")
 
 
     # Define color dictionary for land cover categories
@@ -245,6 +305,16 @@ quarter_dates = update_df(selected_sitecode, quarter_dropdown)
 # change negative values for lc proportions to 0
 quarter_dates.iloc[:, 3:] = quarter_dates.iloc[:, 3:].clip(lower=0)
 
+plt.rcParams.update({
+    'font.size': 10,
+    'font.family': 'sans-serif',
+    'font.sans-serif': ['Arial'],
+    'axes.titlesize': 12,
+    'axes.labelsize': 10,
+    'xtick.labelsize': 10,
+    'ytick.labelsize': 10,
+})
+
 def update_plot(quarter_dates, sitecode, quarter):
     fig, ax = plt.subplots(figsize=(16, 8))
 
@@ -255,15 +325,20 @@ def update_plot(quarter_dates, sitecode, quarter):
     colors = [color_dict.get(col, 'grey') for col in quarter_dates.columns if col not in ['quarter_start', 'SITECODE']]
 
     quarter_dates.set_index('quarter_start').plot(kind='area', stacked=True, color=colors, alpha=0.8, ax=ax)
-    ax.set_title(f'Land Cover Proportions Over the Years for {sitecode} - {quarter}', fontsize=18)
-    ax.set_xlabel('Year', fontsize=16)
-    ax.set_ylabel('Proportion', fontsize=16)
-    ax.tick_params(axis='x', labelsize=16)
-    ax.tick_params(axis='y', labelsize=16)
-    ax.legend(title='Land Cover Category', bbox_to_anchor=(0, -0.15), ncol = 2, loc='upper left', fontsize=16, title_fontsize='18')
+    #ax.set_title(f'Land Cover Proportions Over the Years for {sitecode} in {quarter}', fontsize=12)
+    ax.set_xlabel('Year', fontsize=10)
+    ax.set_ylabel('Proportion', fontsize=10)
+    ax.tick_params(axis='x', labelsize=10, rotation=0)
+    ax.tick_params(axis='y', labelsize=10)
+    #ax.legend(title='Land Cover Category', bbox_to_anchor=(0, -0.15), ncol = 2, loc='upper left', fontsize=16, title_fontsize='18')
+    ax.legend().set_visible(False)
     ax.grid(False)
 
     ax.axvline(pd.to_datetime('2025-01-01'), color='r', linestyle='--')
+
+    # Adjust margins to remove the gap
+    ax.margins(x=0, y=0)
+    plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.1)
 
     # Return the Matplotlib figure object
     return fig
@@ -274,8 +349,17 @@ fig = update_plot(quarter_dates, selected_sitecode, quarter_dropdown)
 st.pyplot(fig)
 
 
+#############################################################################################################################################
+#############################################################################################################################################
+# Part III
+#############################################################################################################################################
+#############################################################################################################################################
+
+
 # Additional graphs for temperature, precipitation, water-vapor-pressure, and cloud-cover:
 with st.container():
+    st.markdown('<h2 style="font-size:24px;">Part III: Predictions of Change in Ecological Variables over Time</h2>', unsafe_allow_html=True)
+    st.markdown("This section will display the change in temperature, precipitation, water pressure and cloud cover from 2015 to 2035.")
     import plotly.graph_objects as go
 
     # Filter the data for the selected sitecode and quarter
@@ -291,18 +375,24 @@ with st.container():
     fig.add_trace(go.Scatter(x=quarter_data['quarter_start'], y=quarter_data['water-vapor-pressure_quarterly_mean'], mode='lines', name='Water Vapor Pressure', line=dict(color='green')))
     fig.add_trace(go.Scatter(x=quarter_data['quarter_start'], y=quarter_data['cloud-cover_quarterly_mean'], mode='lines', name='Cloud Cover', line=dict(color='orange')))
 
-    # Update layout to add hover mode and legend positioning
+    # Update layout to add hover mode, legend positioning, and figure size
     fig.update_layout(
-        hovermode='x', legend=dict(x=0, y=-0.65), xaxis_title='Year', yaxis_title='Value',
-        xaxis=dict(tickmode='array', tickvals=quarter_data['quarter_start'], tickformat="%Y")
-        )
+        hovermode='x', legend=dict(x=0, y=-0.20), xaxis_title='Year', yaxis_title='Value',
+        xaxis=dict(
+            tickmode='array',
+            tickvals=pd.date_range(start=quarter_data['quarter_start'].min(), end=quarter_data['quarter_start'].max(), freq='YS'),
+            tickformat="%Y"
+        ),
+        width=1200,
+        height=800
+    )
 
-    #add line in 2025 to mark the start of predicted values
+    # Add line in 2025 to mark the start of predicted values
     fig.add_shape(
         type="line",
-        x0="2025",
+        x0="2025-01-01",
         y0=0,
-        x1="2025",
+        x1="2025-01-01",
         y1=1,
         line=dict(color="red", width=2, dash="dash"),
         xref="x",
