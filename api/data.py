@@ -1,5 +1,6 @@
 
 import pandas as pd
+# import geopandas as gpd
 
 from google.cloud import bigquery
 from colorama import Fore, Style
@@ -8,8 +9,10 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 from api.params import *
 
+import os
+
+
 def get_data(
-        gcp_project:str,
         query:str,
         data_has_header=True
     ) -> pd.DataFrame:
@@ -19,7 +22,8 @@ def get_data(
     """
     credentials = service_account.Credentials.from_service_account_file(GOOGLE_APP)
     print(Fore.BLUE + "\nLoad data from BigQuery server..." + Style.RESET_ALL)
-    client = bigquery.Client(project=gcp_project,credentials=credentials)
+    client = bigquery.Client(project=GCP_PROJECT,credentials=credentials)
+
     query_job = client.query(query)
     result = query_job.result()
     df = result.to_dataframe()
@@ -43,6 +47,9 @@ def load_data_to_bq(
     - Save the DataFrame to BigQuery
     - Empty the table beforehand if `truncate` is True, append otherwise
     """
+    credentials = service_account.Credentials.from_service_account_file(GOOGLE_APP)
+    print(Fore.BLUE + "\nLoad data from BigQuery server..." + Style.RESET_ALL)
+    client = bigquery.Client(project=GCP_PROJECT,credentials=credentials)
 
     assert isinstance(data, pd.DataFrame)
     full_table_name = f"{gcp_project}.{bq_dataset}.{table}"
@@ -59,7 +66,9 @@ def load_data_to_bq(
     # We don't test directly against their own BQ tables, but only the result of their query
     #data.columns = [f"_{column}" if not str(column)[0].isalpha() and not str(column)[0] == "_" else str(column) for column in data.columns]
 
-    client = bigquery.Client()
+    #client = bigquery.Client()
+    #credentials = service_account.Credentials.from_service_account_file(GOOGLE_APP)
+    #client = bigquery.Client(project=gcp_project,credentials=credentials)
 
     # Define write mode and schema
     write_mode = "WRITE_TRUNCATE" if truncate else "WRITE_APPEND"
@@ -73,9 +82,28 @@ def load_data_to_bq(
 
     print(f"✅ Data saved to bigquery, with shape {data.shape}")
 
+
 if __name__ == '__main__':
-    df = pd.read_csv('api/final_data_2015_2035.csv')
-    load_data_to_bq(df, GCP_PROJECT, BQ_DATASET, TABLE, True)
+    root = os.path.dirname(os.path.dirname(__file__))
+
+    # files_dict = {
+    #     'final_df' : 'final_data_2015_2035.csv',
+    #     'bioregion' : 'pa_infos_csv/new_csvs/bioregion.csv',
+    #     'habitat_class' : 'pa_infos_csv/new_csvs/habitat_class.csv',
+    #     'impact_management' : 'pa_infos_csv/new_csvs/impact_management.csv',
+    #     'species' : 'pa_infos_csv/new_csvs/species.csv',
+    #     'date_ranges': 'date_ranges.csv'
+    # }
+
+    # for tablename, filename in files_dict.items():
+
+    #     path = os.path.join(root, 'raw_data', filename)
+    #     table = pd.read_csv(path)
+    #     load_data_to_bq(table, GCP_PROJECT, BQ_DATASET, tablename, True)
+
+    # shapefile = gpd.read_file(os.path.join(root, 'raw_data/sample_protected_areas_624', "protected_areas_624.shp"))
+    # load_data_to_bq(shapefile, GCP_PROJECT, BQ_DATASET, 'protected_areas_shp', True)
+
     # python api/data.py
 
     # query = f"""
