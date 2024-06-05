@@ -23,6 +23,7 @@ TestResults.xml
 raw_data/
 
 .env
+.env.yaml
 .streamlit/
 # OS generated files #
 ######################
