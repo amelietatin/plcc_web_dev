@@ -1,6 +1,6 @@
 
 import pandas as pd
-# import geopandas as gpd
+import geopandas as gpd
 
 from google.cloud import bigquery
 from colorama import Fore, Style
@@ -22,7 +22,7 @@ def get_data(
     """
     credentials = service_account.Credentials.from_service_account_file(GOOGLE_APP)
     print(Fore.BLUE + "\nLoad data from BigQuery server..." + Style.RESET_ALL)
-    client = bigquery.Client(project=GCP_PROJECT,credentials=credentials)
+    client = bigquery.Client(credentials=credentials, location='EU')
 
     query_job = client.query(query)
     result = query_job.result()
@@ -49,26 +49,11 @@ def load_data_to_bq(
     """
     credentials = service_account.Credentials.from_service_account_file(GOOGLE_APP)
     print(Fore.BLUE + "\nLoad data from BigQuery server..." + Style.RESET_ALL)
-    client = bigquery.Client(project=GCP_PROJECT,credentials=credentials)
+    client = bigquery.Client(project=GCP_PROJECT,credentials=credentials, location='EU')
 
     assert isinstance(data, pd.DataFrame)
     full_table_name = f"{gcp_project}.{bq_dataset}.{table}"
     print(Fore.BLUE + f"\nSave data to BigQuery @ {full_table_name}...:" + Style.RESET_ALL)
-
-    # Load data onto full_table_name
-
-    # 🎯 HINT for "*** TypeError: expected bytes, int found":
-    # After preprocessing the data, your original column names are gone (print it to check),
-    # so ensure that your column names are *strings* that start with either
-    # a *letter* or an *underscore*, as BQ does not accept anything else
-
-    # TODO: simplify this solution if possiBble, but students may very well choose another way to do it
-    # We don't test directly against their own BQ tables, but only the result of their query
-    #data.columns = [f"_{column}" if not str(column)[0].isalpha() and not str(column)[0] == "_" else str(column) for column in data.columns]
-
-    #client = bigquery.Client()
-    #credentials = service_account.Credentials.from_service_account_file(GOOGLE_APP)
-    #client = bigquery.Client(project=gcp_project,credentials=credentials)
 
     # Define write mode and schema
     write_mode = "WRITE_TRUNCATE" if truncate else "WRITE_APPEND"
@@ -86,33 +71,24 @@ def load_data_to_bq(
 if __name__ == '__main__':
     root = os.path.dirname(os.path.dirname(__file__))
 
-    # files_dict = {
-    #     'final_df' : 'final_data_2015_2035.csv',
-    #     'bioregion' : 'pa_infos_csv/new_csvs/bioregion.csv',
-    #     'habitat_class' : 'pa_infos_csv/new_csvs/habitat_class.csv',
-    #     'impact_management' : 'pa_infos_csv/new_csvs/impact_management.csv',
-    #     'species' : 'pa_infos_csv/new_csvs/species.csv',
-    #     'date_ranges': 'date_ranges.csv'
-    # }
+    files_dict = {
+         'final_df' : 'final_table_no_negative.csv',
+         'bioregion' : 'pa_infos_csv/new_csvs/bioregion.csv',
+         'habitat_class' : 'pa_infos_csv/new_csvs/habitat_class.csv',
+        'impact_management' : 'pa_infos_csv/new_csvs/impact_management.csv',
+        'species' : 'pa_infos_csv/new_csvs/species.csv',
+        'date_ranges': 'date_ranges.csv'
+    }
 
-    # for tablename, filename in files_dict.items():
+    for tablename, filename in files_dict.items():
 
-    #     path = os.path.join(root, 'raw_data', filename)
-    #     table = pd.read_csv(path)
-    #     load_data_to_bq(table, GCP_PROJECT, BQ_DATASET, tablename, True)
+        path = os.path.join(root, 'raw_data', filename)
+        table = pd.read_csv(path)
+        #table_2 = table.drop(columns=["Unnamed: 0"])
+        #print(table_2.head())
+        load_data_to_bq(table, GCP_PROJECT, BQ_DATASET, tablename, True)
+
+        break
 
     # shapefile = gpd.read_file(os.path.join(root, 'raw_data/sample_protected_areas_624', "protected_areas_624.shp"))
     # load_data_to_bq(shapefile, GCP_PROJECT, BQ_DATASET, 'protected_areas_shp', True)
-
-    # python api/data.py
-
-    # query = f"""
-    #     SELECT *
-    #     FROM `{GCP_PROJECT}.{BQ_DATASET}.{TABLE}`
-    #     LIMIT 100
-    # """
-    # name = f'{GCP_PROJECT}.{BQ_DATASET}.{TABLE}'
-    # print(name)
-    #     #WHERE pickup_datetime BETWEEN '{min_date}' AND '{max_date}'
-    # df = get_data(GCP_PROJECT, query)
-    # print(df.head())

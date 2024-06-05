@@ -22,10 +22,44 @@ st.set_page_config(page_title="Land Cover Change Predictions", page_icon="🌍",
 
 DATA_SOURCE = 'api'
 
+
+@st.cache_data
+def load_gee():
+    json_data = st.secrets["json_data"]
+    #json_object = json.loads(json_data, strict=False)
+    service_account = st.secrets["service_account"]
+    credentials = ee.ServiceAccountCredentials(service_account, key_data=json_data)
+    ee.Initialize(credentials)
+
+    #Import protected areas GEE asset
+    shapefile = ee.FeatureCollection("projects/lewagon-lc-amelietatin/assets/sample_protected_areas_624")
+    return shapefile
+
+shapefile = load_gee()
+
 if DATA_SOURCE == 'api':
-    table_names = ['final_df','bioregion', 'habitat_class', 'impact_management','species', 'date_ranges', 'protected_areas_shp']
-    url=
-    requests.get
+
+    @st.cache_data
+    def get_data():
+        table_names = ['final_df','bioregion', 'habitat_class', 'impact_management','species', 'date_ranges']
+        url_local = 'http://localhost:8000/data?table_name='
+        url_gcp= 'https://landcoverapi-zxm7fkrvaq-ew.a.run.app/data?table_name='
+
+        table_dict = {}
+        for table_name in table_names:
+            table = pd.DataFrame(requests.get(url=url_gcp+table_name).json())
+            table_dict[table_name] = table
+        return table_dict
+
+    table_dict = get_data()
+    df = table_dict.get('final_df')
+    bioregion = table_dict.get('bioregion')
+    habitat_class = table_dict.get('habitat_class')
+    impact_management = table_dict.get('impact_management')
+    species = table_dict.get('species')
+    date_range_df = table_dict.get('date_ranges')
+
+
 
 if DATA_SOURCE == 'local':
     # Load data
@@ -41,27 +75,14 @@ if DATA_SOURCE == 'local':
         return date_range_df
 
     #pa shapefile
-    @st.cache_data
-    def load_pa_shapefile():
-        pa_sample = gpd.read_file("raw_data/sample_protected_areas_624/protected_areas_624.shp")
-        return pa_sample
-
-    # GEE SERVICE ACCOUNT
-    ## GEE SERVICE ACCOUNT
-    @st.cache_data
-    def load_gee_shapefile():
-        service_account = 'project-lc@lewagon-lc-amelietatin.iam.gserviceaccount.com'
-        credentials = ee.ServiceAccountCredentials(service_account, './key.json')
-        ee.Initialize(credentials)
-
-        #Import protected areas GEE asset
-        shapefile = ee.FeatureCollection("projects/lewagon-lc-amelietatin/assets/sample_protected_areas_624")
-        return shapefile
+    # @st.cache_data
+    # def load_pa_shapefile():
+    #     pa_sample = gpd.read_file("raw_data/sample_protected_areas_624/protected_areas_624.shp")
+    #     return pa_sample
 
     df = load_data()
     date_range_df = load_date_range()
-    pa_sample = load_pa_shapefile()
-    shapefile = load_gee_shapefile()
+    #pa_sample = load_pa_shapefile()
     # PAs infos
     bioregion = pd.read_csv('raw_data/pa_infos_csv/new_csvs/bioregion.csv', sep=',')
     impact_management = pd.read_csv('raw_data/pa_infos_csv/new_csvs/impact_management.csv', sep=',')

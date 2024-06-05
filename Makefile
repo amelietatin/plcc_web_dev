@@ -2,7 +2,10 @@ run_api:
 	uvicorn api.main:app --reload --port 8000
 
 bq_reset:
-	-bq rm --project_id ${GCP_PROJECT} ${BQ_DATASET}.land_cover
+	-bq rm --project_id ${GCP_PROJECT} ${BQ_DATASET}.final_df
+	-bq mk --sync --project_id ${GCP_PROJECT} --location=${BQ_REGION} ${BQ_DATASET}.final_df
+
+bq_create:
 	-bq mk --sync --project_id ${GCP_PROJECT} --location=${BQ_REGION} ${BQ_DATASET}.final_df
 	-bq mk --sync --project_id ${GCP_PROJECT} --location=${BQ_REGION} ${BQ_DATASET}.bioregion
 	-bq mk --sync --project_id ${GCP_PROJECT} --location=${BQ_REGION} ${BQ_DATASET}.habitat_class
@@ -70,11 +73,17 @@ gcloud-register-artifact:
 
 
 ############# building and pushing to Gcloud Artifact Registry ############3
-build-gcloud:
+build-gcloud-windows:
 	docker build -t ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${GAR_REPO}/${GAR_IMAGE}:prod .
 
-build-test-gcloud:
+build-gcloud-mac:
+	docker build  --platform linux/amd64 -t ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${GAR_REPO}/${GAR_IMAGE}:prod .
+
+build-test-gcloud-windows:
 	docker run -p 8000:8000 --env-file .env ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${GAR_REPO}/${GAR_IMAGE}:prod
+
+build-test-gcloud-mac:
+	docker run  --platform linux/amd64 -p 8000:8000 --env-file .env ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${GAR_REPO}/${GAR_IMAGE}:prod
 
 push:
 	docker push ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${GAR_REPO}/${GAR_IMAGE}:prod
@@ -91,3 +100,7 @@ status:
 
 stop-gcloud:
 	gcloud run services delete ${GAR_IMAGE}
+
+
+upload_data:
+	python api/data.py
