@@ -8,6 +8,8 @@ app = FastAPI()
 # Load CSV data
 #df = pd.read_csv('api/final_data_2015_2035.csv')
 #load_data_to_bq(df, GCP_PROJECT, BQ_DATASET, TABLE, True)
+GCP_PROJECT = 'lewagon-lc-amelietatin'
+BQ_DATASET = 'landcover'
 
 @app.get("/")
 def read_root():
@@ -15,22 +17,11 @@ def read_root():
 
 @app.get("/data")
 def data(table_name):
+    print(f"{GCP_PROJECT}.{BQ_DATASET}.{table_name}")
     query = f"""
         SELECT *
-        FROM [`lewagon-lc-amelietatin.landcover.bioregion`]
+        FROM `{GCP_PROJECT}.{BQ_DATASET}.{table_name}`
     """
     print(query)
-    df_bq = get_data(GCP_PROJECT, query)
-    return df_bq.to_dict(orient='records')
-
-@app.get("/data/{item_id}")
-def get_data_item(item_id: str):
-    query = f"""
-        SELECT *
-        FROM `{GCP_PROJECT}.{BQ_DATASET}.{TABLE}`
-        WHERE SITECODE IS {item_id}
-    """
-    # if item_id >= len(df):
-    #     return {"error": "Item not found"}
-    df_bq = get_data(GCP_PROJECT, query)
+    df_bq = get_data(query)
     return df_bq.to_dict(orient='records')

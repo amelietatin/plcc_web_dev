@@ -19,10 +19,12 @@ rad.json
 #License-file
 *.flf
 #Test results file
-TestResults.xmlraw_data/
+TestResults.xml
+raw_data/
 
 .env
-
+.env.yaml
+.streamlit/
 # OS generated files #
 ######################
 .DS_Store
@@ -59,4 +61,3 @@ key.json
 
 le-wagnon-data-and-ml-cba2613dcc9f.json
 lewagon-lc-amelietatin-ff0f7145f9cc.json
-
