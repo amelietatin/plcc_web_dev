@@ -32,7 +32,7 @@ def load_gee():
     ee.Initialize(credentials)
 
     #Import protected areas GEE asset
-    shapefile = ee.FeatureCollection("projects/lewagon-lc-amelietatin/assets/sample_protected_areas_624")
+    shapefile = ee.FeatureCollection("projects/lewagon-lc-amelietatin/assets/final_df_shp")
     return shapefile
 
 shapefile = load_gee()
@@ -60,14 +60,24 @@ if DATA_SOURCE == 'api':
     species = table_dict.get('species')
     date_range_df = table_dict.get('date_ranges')
 
+    #Drop ‘Unnamed: 0’ column if it exists
+
+    #df = df.drop('Unnamed: 0')
 
 
 if DATA_SOURCE == 'local':
     # Load data
     @st.cache_data
     def load_data():
-        df = pd.read_csv('raw_data/final_data_2015_2035.csv')
+        df = pd.read_csv('raw_data/final_table_no_negative.csv')
+
+        #Drop ‘Unnamed: 0’ column if it exists
+        if 'Unnamed: 0' in df.columns:
+            df = df.drop(columns=['Unnamed: 0'])
+
         return df
+
+    #st.write(df)
 
     # Timerange
     @st.cache_data
@@ -128,7 +138,7 @@ selected_sitecode = st.sidebar.selectbox(
 selected_sitecode = bioregion_sample[(bioregion_sample['SITENAME'] == selected_sitecode)]['SITECODE'].values[0]
 
 #YEARS
-years = date_range_df['Year'].unique()
+years = date_range_df['Year'].unique().sort()
 selected_year = st.sidebar.select_slider(
         label='Year:',
         options=list(years),
