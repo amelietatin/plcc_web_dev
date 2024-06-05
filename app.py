@@ -13,11 +13,93 @@ import geopandas as gpd
 
 import requests
 
-# Page configuration
-st.set_page_config(page_title="Predicting Land Cover Changes in European Protected Areas", page_icon="🌍", layout="wide")
+# DATA #
+
+@st.cache_data
+def load_gee():
+    json_data = st.secrets["json_data"]
+    #json_object = json.loads(json_data, strict=False)
+    service_account = st.secrets["service_account"]
+    credentials = ee.ServiceAccountCredentials(service_account, key_data=json_data)
+    ee.Initialize(credentials)
+
+    #Import protected areas GEE asset
+    shapefile = ee.FeatureCollection("projects/lewagon-lc-amelietatin/assets/final_df_shp")
+    return shapefile
+
+shapefile = load_gee()
+
+DATA_SOURCE = 'api'
+
+if DATA_SOURCE == 'api':
+
+    @st.cache_data
+    def get_data():
+        table_names = ['final_df','bioregion', 'habitat_class', 'impact_management','species', 'date_ranges']
+        url_local = 'http://localhost:8000//data?table_name='
+        url_gcp= 'https://landcoverapi-zxm7fkrvaq-ew.a.run.app//data?table_name='
+
+        table_dict = {}
+        for table_name in table_names:
+            response = requests.get(url=url_gcp+table_name).json()
+            table = pd.DataFrame(response)
+            table_dict[table_name] = table
+        return table_dict
+
+    table_dict = get_data()
+    df = table_dict.get('final_df')
+    bioregion = table_dict.get('bioregion')
+    habitat_class = table_dict.get('habitat_class')
+    impact_management = table_dict.get('impact_management')
+    species = table_dict.get('species')
+    date_range_df = table_dict.get('date_ranges')
+
+    #Drop ‘Unnamed: 0’ column if it exists
+
+    #df = df.drop('Unnamed: 0')
+
+
+if DATA_SOURCE == 'local':
+    # Load data
+    @st.cache_data
+    def load_data():
+        df = pd.read_csv('raw_data/final_table_no_negative.csv')
+
+        #Drop ‘Unnamed: 0’ column if it exists
+        if 'Unnamed: 0' in df.columns:
+            df = df.drop(columns=['Unnamed: 0'])
+
+        return df
+
+    #st.write(df)
+
+    # Timerange
+    @st.cache_data
+    def load_date_range():
+        date_range_df = pd.read_csv('raw_data/date_ranges.csv', sep=',')
+        return date_range_df
+
+    #pa shapefile
+    # @st.cache_data
+    # def load_pa_shapefile():
+    #     pa_sample = gpd.read_file("raw_data/sample_protected_areas_624/protected_areas_624.shp")
+    #     return pa_sample
+
+    df = load_data()
+    date_range_df = load_date_range()
+    #pa_sample = load_pa_shapefile()
+    # PAs infos
+    bioregion = pd.read_csv('raw_data/pa_infos_csv/new_csvs/bioregion.csv', sep=',')
+    impact_management = pd.read_csv('raw_data/pa_infos_csv/new_csvs/impact_management.csv', sep=',')
+    species = pd.read_csv('raw_data/pa_infos_csv/new_csvs/species.csv', sep=',')
+    habitat_class = pd.read_csv('raw_data/pa_infos_csv/new_csvs/habitat_class.csv', sep=',')
 
 #############################################################################################################################################
 #############################################################################################################################################
+# Page configuration
+st.set_page_config(page_title="Predicting Land Cover Changes in European Protected Areas", page_icon="🌍", layout="wide")
+
+
 # Navigation between Page 1, 2 and 3
 
 # Intro page
@@ -34,7 +116,6 @@ def intro():
         }
     </style>
     """, unsafe_allow_html=True)
-
     st.markdown("""
     <div style="font-size: 20px; color:white;">
     <strong>Why did we choose this project?:</strong>
@@ -90,80 +171,15 @@ def intro():
     """
     st.markdown(background_image, unsafe_allow_html=True)
 
+
+#############################################################################################################################################
+#############################################################################################################################################
+
 # Main page
 def main():
     st.title("Land Cover Change Predictions")
     st.write("(I) Map of Protected Area, (II) Historical and Future Land Cover Proportions, (III) Timely Change of Ecological Variables")
 
-    #############################################################################################################################################
-    #############################################################################################################################################
-    # DATA
-
-    DATA_SOURCE = 'api'
-
-    @st.cache_data
-    def load_gee():
-        json_data = st.secrets["json_data"]
-        #json_object = json.loads(json_data, strict=False)
-        service_account = st.secrets["service_account"]
-        credentials = ee.ServiceAccountCredentials(service_account, key_data=json_data)
-        ee.Initialize(credentials)
-
-        #Import protected areas GEE asset
-        shapefile = ee.FeatureCollection("projects/lewagon-lc-amelietatin/assets/sample_protected_areas_624")
-        return shapefile
-
-    shapefile = load_gee()
-
-    if DATA_SOURCE == 'api':
-
-        @st.cache_data
-        def get_data():
-            table_names = ['final_df','bioregion', 'habitat_class', 'impact_management','species', 'date_ranges']
-            url_local = 'http://localhost:8000//data?table_name='
-            url_gcp= 'https://landcoverapi-zxm7fkrvaq-ew.a.run.app//data?table_name='
-
-            table_dict = {}
-            for table_name in table_names:
-                response = requests.get(url=url_gcp+table_name).json()
-                table = pd.DataFrame(response)
-                table_dict[table_name] = table
-            return table_dict
-
-        table_dict = get_data()
-        df = table_dict.get('final_df')
-        bioregion = table_dict.get('bioregion')
-        habitat_class = table_dict.get('habitat_class')
-        impact_management = table_dict.get('impact_management')
-        species = table_dict.get('species')
-        date_range_df = table_dict.get('date_ranges')
-
-
-
-    if DATA_SOURCE == 'local':
-        # Load data
-        @st.cache_data
-        def load_data():
-            df = pd.read_csv('raw_data/final_data_2015_2035.csv')
-            return df
-
-        # Timerange
-        @st.cache_data
-        def load_date_range():
-            date_range_df = pd.read_csv('raw_data/date_ranges.csv', sep=',')
-            return date_range_df
-
-        df = load_data()
-        date_range_df = load_date_range()
-        #pa_sample = load_pa_shapefile()
-        # PAs infos
-        bioregion = pd.read_csv('raw_data/pa_infos_csv/new_csvs/bioregion.csv', sep=',')
-        impact_management = pd.read_csv('raw_data/pa_infos_csv/new_csvs/impact_management.csv', sep=',')
-        species = pd.read_csv('raw_data/pa_infos_csv/new_csvs/species.csv', sep=',')
-        habitat_class = pd.read_csv('raw_data/pa_infos_csv/new_csvs/habitat_class.csv', sep=',')
-
-    #############################################################################################################################################
-    #############################################################################################################################################
     ##SIDEBAR
     st.sidebar.header("User Input Parameters")
 
@@ -198,9 +214,9 @@ def main():
     )
 
     selected_sitecode = bioregion_sample[(bioregion_sample['SITENAME'] == selected_sitecode)]['SITECODE'].values[0]
-    selected_sitename = bioregion_sample[(bioregion_sample['SITECODE'] == selected_sitecode)]['SITENAME'].values[0]
+
     #YEARS
-    years = date_range_df['Year'].unique()
+    years = date_range_df['Year'].unique().sort()
     selected_year = st.sidebar.select_slider(
             label='Year:',
             options=list(years),
@@ -219,6 +235,7 @@ def main():
         )
 
     # Define legend on sidebar
+     # Define legend on sidebar
     legend_html = """
     <div style='padding: 10px; background-color: #f4f4f4; border: 1px solid #ddd; margin-top: 20px;'>
         <h4>Legend</h4>
@@ -258,7 +275,6 @@ def main():
     # Add legend to sidebar
     st.sidebar.markdown(quarter_html, unsafe_allow_html=True)
     st.sidebar.markdown(legend_html, unsafe_allow_html=True)
-
 
     #############################################################################################################################################
     #############################################################################################################################################
@@ -417,11 +433,6 @@ def main():
     # FLORI
     #############################################################################################################################################
     #############################################################################################################################################
-
-
-    # url_base='https://landcoverapi-f37abimraq-ew.a.run.app/'
-    # response = requests.get(url=url_base+'/data').json()
-    # df = pd.DataFrame(response)
 
     df_lc = df.drop(columns=['temperature_quarterly_mean', 'precipitation_quarterly_mean', 'water-vapor-pressure_quarterly_mean', 'cloud-cover_quarterly_mean'])
     df_eco = df[["SITECODE", "quarter_start", "temperature_quarterly_mean", "precipitation_quarterly_mean", "water-vapor-pressure_quarterly_mean", "cloud-cover_quarterly_mean"]].copy()
