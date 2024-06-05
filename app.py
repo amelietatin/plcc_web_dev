@@ -13,15 +13,7 @@ import geopandas as gpd
 
 import requests
 
-# Page configuration
-st.set_page_config(page_title="Land Cover Change Predictions", page_icon="🌍", layout="wide")
-
-#############################################################################################################################################
-#############################################################################################################################################
-# DATA
-
-DATA_SOURCE = 'api'
-
+# DATA #
 
 @st.cache_data
 def load_gee():
@@ -36,6 +28,8 @@ def load_gee():
     return shapefile
 
 shapefile = load_gee()
+
+DATA_SOURCE = 'api'
 
 if DATA_SOURCE == 'api':
 
@@ -102,350 +96,571 @@ if DATA_SOURCE == 'local':
 
 #############################################################################################################################################
 #############################################################################################################################################
-##SIDEBAR
-st.sidebar.header("User Input Parameters")
-
-#BIOREGION
-bioregion_sitecode = bioregion[bioregion['SITECODE'].isin(df['SITECODE'])]
-bioregions = bioregion_sitecode['BIOREGION'].unique()
-selected_bioregions = st.sidebar.selectbox(
-    label='Bioregion:',
-    options=bioregions,
-    index=0,
-    help='Select a Bioregion',
-)
-
-bioregion_sample = bioregion_sitecode[(bioregion_sitecode['BIOREGION'] == selected_bioregions)]
-#COUNTRY
-countries = bioregion_sample.COUNTRY_NAME.unique()
-selected_sitecode = st.sidebar.selectbox(
-    label='Country:',
-    options=countries,
-    index=0,
-    help='Select a Country',
-)
+# Page configuration
+st.set_page_config(page_title="Predicting Land Cover Changes in European Protected Areas", page_icon="🌍", layout="wide")
 
 
-#SITECODES NAMES FOR DROPDOWN
-sitecodes = bioregion_sample.SITENAME.unique()
-selected_sitecode = st.sidebar.selectbox(
-    label='Protected Area:',
-    options=sitecodes,
-    index=0,
-    help='Select a Protected Area',
-)
+# Navigation between Page 1, 2 and 3
 
-selected_sitecode = bioregion_sample[(bioregion_sample['SITENAME'] == selected_sitecode)]['SITECODE'].values[0]
+# Intro page
+def intro():
 
-#YEARS
-years = date_range_df['Year'].unique().sort()
-selected_year = st.sidebar.select_slider(
-        label='Year:',
-        options=list(years),
-        help='Select a Year',
-)
-
-#QUARTERS
-quarters = {'Q1': '01-01', 'Q2': '04-01', 'Q3': '07-01', 'Q4': '10-01'}
-default_ix = list(quarters.keys()).index('Q3')
-#Create dropdown for quarters
-quarter_dropdown = st.sidebar.radio(
-    label='Quarter:',
-    options=list(quarters.keys()),
-    index=default_ix,
-    help='Select a Quarter',
-    )
-
-# Define legend on sidebar
-legend_html = """
-<div style='padding: 10px; background-color: #f4f4f4; border: 1px solid #ddd; margin-top: 20px;'>
-    <h4>Legend</h4>
-    <ul style='list-style-type: none; padding: 0;'>
-        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #419bdf; margin-right: 10px;'></span>Water</li>
-        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #397d49; margin-right: 10px;'></span>Trees</li>
-        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #88b053; margin-right: 10px;'></span>Grass</li>
-        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #7a87c6; margin-right: 10px;'></span>Flooded Vegetation</li>
-        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #e49635; margin-right: 10px;'></span>Crops</li>
-        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #dfc35a; margin-right: 10px;'></span>Shrub and Scrub</li>
-        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #c4281b; margin-right: 10px;'></span>Built</li>
-        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #a59b8f; margin-right: 10px;'></span>Bare</li>
-        <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #b39fe1; margin-right: 10px;'></span>Snow and Ice</li>
+    st.title("Project Introduction")
+    st.markdown("""
+    <style>
+        .st-emotion-cache-12fmjuu {
+            visibility: hidden;
+        }
+        #project-introduction {
+            color: white;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    st.markdown("""
+    <div style="font-size: 20px; color:white;">
+    <strong>Why did we choose this project?:</strong>
+    <ul>
+    <li>Point 1</li>
+    <li>Point 2</li>
+    <li>Point 3</li>
     </ul>
-</div>
-"""
-quarter_html = """
-<div style='padding: 10px; background-color: #f4f4f4; border: 1px solid #ddd; margin-top: 20px;'>
-    <h4>Quarter range</h4>
-    <ul style='list-style-type: none; padding: 0;'>
-        <li><width: 20px; height: 20px; background-color: #f4f4f4; margin-right: 10px;'></span>Q1: Jan-Mar</li>
-        <li><width: 20px; height: 20px; background-color: #f4f4f4; margin-right: 10px;'></span>Q2: Apr-Jun</li>
-        <li><width: 20px; height: 20px; background-color: #f4f4f4; margin-right: 10px;'></span>Q3: Jul-Sep</li>
-        <li><width: 20px; height: 20px; background-color: #f4f4f4; margin-right: 10px;'></span>Q4: Oct-Dec</li>
-    </ul>
-</div>
-"""
-
-# Add legend to sidebar
-st.sidebar.markdown(quarter_html, unsafe_allow_html=True)
-st.sidebar.markdown(legend_html, unsafe_allow_html=True)
-
-
-#############################################################################################################################################
-#############################################################################################################################################
-# AMELIE
-#############################################################################################################################################
-#############################################################################################################################################
-
-#Define which quartal
-start = date_range_df[(date_range_df['Quartal'] == quarter_dropdown) & (date_range_df['Year'] == selected_year)]['Start_Date'].values[0]
-end = date_range_df[(date_range_df['Quartal'] == quarter_dropdown) & (date_range_df['Year'] == selected_year)]['End_Date'].values[0]
-
-#############################################################################################################################################
-#############################################################################################################################################
-# Part I
-#############################################################################################################################################
-#############################################################################################################################################
-
-with st.container():
-    st.markdown('<h2 style="font-size:24px;">Part I: Historical Land Cover Proportions</h2>', unsafe_allow_html=True)
-    st.markdown("This section will display the change in land cover over time using images.")
-
-    # Convert start and end dates to ee.Date
-    START = ee.Date(str(start))
-    END = ee.Date(str(end))
-
-    # Filter the shapefile for the specific protected area
-    specific_feature_collection = shapefile.filter(ee.Filter.eq('SITECODE', selected_sitecode))
-    geometry = specific_feature_collection.geometry()
-
-    # Create a filter based on the geometry and date range
-    col_filter = ee.Filter.And(
-        ee.Filter.geometry(geometry),
-        ee.Filter.date(START, END),
-    )
-
-    # Apply the filter to the DynamicWorld and Sentinel-2 collections
-    dw_col = ee.ImageCollection('GOOGLE/DYNAMICWORLD/V1').filter(col_filter).filterBounds(geometry)
-    dw_col_clipped = dw_col.map(lambda image: image.clip(geometry))
-    s2_col = ee.ImageCollection('COPERNICUS/S2').filter(col_filter)
-
-    # Join corresponding DW and S2 images
-    dw_s2_col = ee.Join.saveFirst('s2_img').apply(
-        dw_col_clipped,
-        s2_col,
-        ee.Filter.equals(leftField='system:index', rightField='system:index'),
-    )
-
-    # Extract an example DW image and its source S2 image
-    dw_image = ee.Image(dw_s2_col.first())
-    s2_image = ee.Image(dw_image.get('s2_img'))
-
-    # Define land cover class names and their corresponding color palette
-    CLASS_NAMES = [
-        'water', 'trees', 'grass', 'flooded_vegetation', 'crops',
-        'shrub_and_scrub', 'built', 'bare', 'snow_and_ice'
-    ]
-    VIS_PALETTE = [
-        '419bdf', '397d49', '88b053', '7a87c6', 'e49635',
-        'dfc35a', 'c4281b', 'a59b8f', 'b39fe1'
-    ]
-
-    # Create an RGB image of the label (most likely class) on [0, 1]
-    dw_rgb = (
-        dw_image.select('label')
-        .visualize(min=0, max=8, palette=VIS_PALETTE)
-        .divide(255)
-    )
-
-    # Get the most likely class probability
-    top1_prob = dw_image.select(CLASS_NAMES).reduce(ee.Reducer.max())
-
-    # Create a hillshade of the most likely class probability on [0, 1]
-    top1_prob_hillshade = ee.Terrain.hillshade(top1_prob.multiply(100)).divide(255)
-
-    # Combine the RGB image with the hillshade
-    dw_rgb_hillshade = dw_rgb.multiply(top1_prob_hillshade)
-
-    # Get lon and lat of protected area
-    dict_pa = specific_feature_collection.getInfo()
-    lon = dict_pa.get('features')[0].get('properties').get('lon')
-    lat = dict_pa.get('features')[0].get('properties').get('lat')
-
-    # Initialize map
-    m = geemap.Map(center=(lat, lon), zoom=14)
-
-    # Add protected area layer
-    m.addLayer(geometry, {}, 'Protected Area')
-
-    # Add Dynamic World layer
-    m.addLayer(dw_rgb_hillshade, {'min': 0, 'max': 0.65}, 'Dynamic World Dataset')
-
-
-    # Display map in Streamlit
-    m.to_streamlit(height=600)
-
-
-#############################################################################################################################################
-#############################################################################################################################################
-# FLORI
-#############################################################################################################################################
-#############################################################################################################################################
-
-
-# url_base='https://landcoverapi-f37abimraq-ew.a.run.app/'
-# response = requests.get(url=url_base+'/data').json()
-# df = pd.DataFrame(response)
-
-#Drop 'Unnamed: 0' column if it exists (as I haad this problem before)
-if 'Unnamed: 0' in df.columns:
-    df = df.drop(columns=['Unnamed: 0'])
-
-df_lc = df.drop(columns=['temperature_quarterly_mean', 'precipitation_quarterly_mean', 'water-vapor-pressure_quarterly_mean', 'cloud-cover_quarterly_mean'])
-df_eco = df[["SITECODE", "quarter_start", "temperature_quarterly_mean", "precipitation_quarterly_mean", "water-vapor-pressure_quarterly_mean", "cloud-cover_quarterly_mean"]].copy()
-
-# Integration of graph code
-df_lc['quarter_start'] = pd.to_datetime(df_lc['quarter_start'])
-df_eco['quarter_start'] = pd.to_datetime(df_lc['quarter_start'])
-
-
-#############################################################################################################################################
-#############################################################################################################################################
-# Part II
-#############################################################################################################################################
-#############################################################################################################################################
-
-
-with st.container():
-    st.markdown('<h2 style="font-size:24px;">Part II: Predictions of Change in Land Cover Proportions over Time</h2>', unsafe_allow_html=True)
-    st.markdown("This section will display the historical evolution and predicted change over the next 10 years.")
-
-
-    # Define color dictionary for land cover categories
-    color_dict = {
-        'Trees': '#397d49',
-        'Snow and Ice': '#b39fe1',
-        'Water': '#419bdf',
-        'Bare Ground': '#a59b8f',
-        'Crops': '#e49635',
-        'Grass': '#88b053',
-        'Shrub and Scrub': '#dfc35a',
-        'Built Area': '#c4281b',
-        'Flooded Vegetation': '#7a87c6'
-    }
-
-
-def update_df(sitecode, quarter):
-    filtered_pa_data = df_lc[df_lc['SITECODE'] == sitecode]
-    start_date = quarters[quarter]
-    quarter_dates = filtered_pa_data[filtered_pa_data['quarter_start'].dt.strftime('%m-%d') == start_date]
-    return quarter_dates
-
-quarter_dates = update_df(selected_sitecode, quarter_dropdown)
-
-# change negative values for lc proportions to 0
-quarter_dates.iloc[:, 3:] = quarter_dates.iloc[:, 3:].clip(lower=0)
-
-plt.rcParams.update({
-    'font.size': 10,
-    'font.family': 'sans-serif',
-    'font.sans-serif': ['Arial'],
-    'axes.titlesize': 12,
-    'axes.labelsize': 10,
-    'xtick.labelsize': 10,
-    'ytick.labelsize': 10,
-})
-
-def update_plot(quarter_dates, sitecode, quarter):
-    fig, ax = plt.subplots(figsize=(16, 8))
-
-    # Set the Seaborn style
-    sns.set(style="whitegrid")
-
-    # Get colors for the categories from the color dictionary, falling back to default if not found
-    colors = [color_dict.get(col, 'grey') for col in quarter_dates.columns if col not in ['quarter_start', 'SITECODE']]
-
-    quarter_dates.set_index('quarter_start').plot(kind='area', stacked=True, color=colors, alpha=0.8, ax=ax)
-    #ax.set_title(f'Land Cover Proportions Over the Years for {sitecode} in {quarter}', fontsize=12)
-    ax.set_xlabel('Year', fontsize=10)
-    ax.set_ylabel('Proportion', fontsize=10)
-    ax.tick_params(axis='x', labelsize=10, rotation=0)
-    ax.tick_params(axis='y', labelsize=10)
-    #ax.legend(title='Land Cover Category', bbox_to_anchor=(0, -0.15), ncol = 2, loc='upper left', fontsize=16, title_fontsize='18')
-    ax.legend().set_visible(False)
-    ax.grid(False)
-
-    ax.axvline(pd.to_datetime('2025-01-01'), color='r', linestyle='--')
-
-    # Adjust margins to remove the gap
-    ax.margins(x=0, y=0)
-    plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.1)
-
-    # Return the Matplotlib figure object
-    return fig
-
-fig = update_plot(quarter_dates, selected_sitecode, quarter_dropdown)
-
-# Display the plot in Streamlit
-st.pyplot(fig)
-
-
-#############################################################################################################################################
-#############################################################################################################################################
-# Part III
-#############################################################################################################################################
-#############################################################################################################################################
-
-
-# Additional graphs for temperature, precipitation, water-vapor-pressure, and cloud-cover:
-with st.container():
-    st.markdown('<h2 style="font-size:24px;">Part III: Predictions of Change in Ecological Variables over Time</h2>', unsafe_allow_html=True)
-    st.markdown("This section will display the change in temperature, precipitation, water pressure and cloud cover from 2015 to 2035.")
-    import plotly.graph_objects as go
-
-    # Filter the data for the selected sitecode and quarter
-    quarter_data = df_eco[df_eco['SITECODE'] == selected_sitecode]
-    quarter_data = quarter_data[quarter_data['quarter_start'].dt.quarter == int(quarter_dropdown[1])]
-
-    # Create the figure
-    fig = go.Figure()
-
-    # Add traces for each ecological variable
-    fig.add_trace(go.Scatter(x=quarter_data['quarter_start'], y=quarter_data['temperature_quarterly_mean'], mode='lines', name='Temperature', line=dict(color='red')))
-    fig.add_trace(go.Scatter(x=quarter_data['quarter_start'], y=quarter_data['precipitation_quarterly_mean'], mode='lines', name='Precipitation', line=dict(color='blue')))
-    fig.add_trace(go.Scatter(x=quarter_data['quarter_start'], y=quarter_data['water-vapor-pressure_quarterly_mean'], mode='lines', name='Water Vapor Pressure', line=dict(color='green')))
-    fig.add_trace(go.Scatter(x=quarter_data['quarter_start'], y=quarter_data['cloud-cover_quarterly_mean'], mode='lines', name='Cloud Cover', line=dict(color='orange')))
-
-    # Update layout to add hover mode, legend positioning, and figure size
-    fig.update_layout(
-        hovermode='x', legend=dict(x=0, y=-0.20), xaxis_title='Year', yaxis_title='Value',
-        xaxis=dict(
-            tickmode='array',
-            tickvals=pd.date_range(start=quarter_data['quarter_start'].min(), end=quarter_data['quarter_start'].max(), freq='YS'),
-            tickformat="%Y"
-        ),
-        width=1200,
-        height=800
-    )
-
-    # Add line in 2025 to mark the start of predicted values
-    fig.add_shape(
-        type="line",
-        x0="2025-01-01",
-        y0=0,
-        x1="2025-01-01",
-        y1=1,
-        line=dict(color="red", width=2, dash="dash"),
-        xref="x",
-        yref="paper"
-    )
-
-    # Show the plot
-    st.plotly_chart(fig)
-
-
-# Add footer
-st.markdown("""
-    <div class="footer">
-        Created with ❤️ by Amélie, Tim, Flori, and Ali
     </div>
     """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="font-size: 20px; color:white;">
+    <strong>Why is it so important to increase awareness?:</strong>
+    <ul>
+    <li>Point 1</li>
+    <li>Point 2</li>
+    <li>Point 3</li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="font-size: 20px; color:white;">
+    <strong>What do we hope to achieve?:</strong>
+    <ul>
+    <li>Point 1</li>
+    <li>Point 2</li>
+    <li>Point 3</li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Change background color of sidebar
+    st.markdown("""
+    <style>
+        [data-testid=stSidebar] {
+            background-color: #a2ac94;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Set the background image
+    background_image = """
+    <style>
+    [data-testid="stAppViewContainer"] > .main {
+        background-image: url("https://media.wired.com/photos/63dd40bb84464089ca2fc6ab/master/pass/Sci-amazon-1322470077");
+        background-size: 100vw 100vh;  # This sets the size to cover 100% of the viewport width and height
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+    </style>
+    """
+    st.markdown(background_image, unsafe_allow_html=True)
+
+
+#############################################################################################################################################
+#############################################################################################################################################
+
+# Main page
+def main():
+    st.title("Land Cover Change Predictions")
+    st.write("(I) Map of Protected Area, (II) Historical and Future Land Cover Proportions, (III) Timely Change of Ecological Variables")
+
+    ##SIDEBAR
+    st.sidebar.header("User Input Parameters")
+
+    #BIOREGION
+    bioregion_sitecode = bioregion[bioregion['SITECODE'].isin(df['SITECODE'])]
+    bioregions = bioregion_sitecode['BIOREGION'].unique()
+    selected_bioregions = st.sidebar.selectbox(
+        label='Bioregion:',
+        options=bioregions,
+        index=0,
+        help='Select a Bioregion',
+    )
+
+    bioregion_sample = bioregion_sitecode[(bioregion_sitecode['BIOREGION'] == selected_bioregions)]
+    #COUNTRY
+    countries = bioregion_sample.COUNTRY_NAME.unique()
+    selected_sitecode = st.sidebar.selectbox(
+        label='Country:',
+        options=countries,
+        index=0,
+        help='Select a Country',
+    )
+
+
+    #SITECODES NAMES FOR DROPDOWN
+    sitecodes = bioregion_sample.SITENAME.unique()
+    selected_sitecode = st.sidebar.selectbox(
+        label='Protected Area:',
+        options=sitecodes,
+        index=0,
+        help='Select a Protected Area',
+    )
+
+    selected_sitecode = bioregion_sample[(bioregion_sample['SITENAME'] == selected_sitecode)]['SITECODE'].values[0]
+
+    #YEARS
+    years = date_range_df['Year'].unique().sort()
+    selected_year = st.sidebar.select_slider(
+            label='Year:',
+            options=list(years),
+            help='Select a Year',
+    )
+
+    #QUARTERS
+    quarters = {'Q1': '01-01', 'Q2': '04-01', 'Q3': '07-01', 'Q4': '10-01'}
+    default_ix = list(quarters.keys()).index('Q3')
+    #Create dropdown for quarters
+    quarter_dropdown = st.sidebar.radio(
+        label='Quarter:',
+        options=list(quarters.keys()),
+        index=default_ix,
+        help='Select a Quarter',
+        )
+
+    # Define legend on sidebar
+     # Define legend on sidebar
+    legend_html = """
+    <div style='padding: 10px; background-color: #f4f4f4; border: 1px solid #ddd; margin-top: 20px;'>
+        <h4>Legend</h4>
+        <ul style='list-style-type: none; padding: 0;'>
+            <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #419bdf; margin-right: 10px;'></span>Water</li>
+            <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #397d49; margin-right: 10px;'></span>Trees</li>
+            <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #88b053; margin-right: 10px;'></span>Grass</li>
+            <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #7a87c6; margin-right: 10px;'></span>Flooded Vegetation</li>
+            <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #e49635; margin-right: 10px;'></span>Crops</li>
+            <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #dfc35a; margin-right: 10px;'></span>Shrub and Scrub</li>
+            <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #c4281b; margin-right: 10px;'></span>Built</li>
+            <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #a59b8f; margin-right: 10px;'></span>Bare</li>
+            <li><span style='display: inline-block; width: 20px; height: 20px; background-color: #b39fe1; margin-right: 10px;'></span>Snow and Ice</li>
+        </ul>
+    </div>
+    """
+    quarter_html = """
+    <div style='padding: 10px; background-color: #f4f4f4; border: 1px solid #ddd; margin-top: 20px;'>
+        <h4>Quarter range</h4>
+        <ul style='list-style-type: none; padding: 0;'>
+            <li><width: 20px; height: 20px; background-color: #f4f4f4; margin-right: 10px;'></span>Q1: Jan-Mar</li>
+            <li><width: 20px; height: 20px; background-color: #f4f4f4; margin-right: 10px;'></span>Q2: Apr-Jun</li>
+            <li><width: 20px; height: 20px; background-color: #f4f4f4; margin-right: 10px;'></span>Q3: Jul-Sep</li>
+            <li><width: 20px; height: 20px; background-color: #f4f4f4; margin-right: 10px;'></span>Q4: Oct-Dec</li>
+        </ul>
+    </div>
+    """
+    # Change background color of sidebar
+    st.markdown("""
+    <style>
+        [data-testid=stSidebar] {
+            background-color: #a2ac94;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Add legend to sidebar
+    st.sidebar.markdown(quarter_html, unsafe_allow_html=True)
+    st.sidebar.markdown(legend_html, unsafe_allow_html=True)
+
+    #############################################################################################################################################
+    #############################################################################################################################################
+    # Information Box
+    #############################################################################################################################################
+    #############################################################################################################################################
+
+    # Function to format the information lists as bullet points in columns
+    def format_info(info_list):
+        if len(info_list) == 0:
+            return f"No information available."
+        info_str = ""
+        if len(info_list) > 4:
+            half = (len(info_list) +1) // 2
+            col1_list = info_list[:half]
+            col2_list = info_list[half:]
+            info_str += "<div style='display: flex;'>"
+            info_str += "<div style='flex: 1;'>"
+            for item in col1_list:
+                info_str += f"- {item}<br>"
+            info_str += "</div><div style='flex: 1;'>"
+            for item in col2_list:
+                info_str += f"- {item}<br>"
+            info_str += "</div></div>"
+        else:
+            for item in info_list:
+                info_str += f"- {item}<br>"
+        return info_str
+
+    # Habitat information
+    habitat_info = habitat_class[(habitat_class['SITECODE'] == selected_sitecode)]['HABITAT_DESCRIPTION'].unique()
+    habitat_info_str = format_info(habitat_info)
+
+    # Species information
+    species_info = species[(species['SITECODE'] == selected_sitecode)]['SPECIESGROUP'].unique()
+    species_info_str = format_info(species_info)
+
+    # Impact information
+    impact_info = impact_management[(impact_management['SITECODE'] == selected_sitecode)]['IMPACT_DESCRIPTION'].unique()
+    impact_info_str = format_info(impact_info)
+
+    # Management measures information
+    manag_info = impact_management[(impact_management['SITECODE'] == selected_sitecode)]['MANAG_CONSERV_MEASURES'].unique()
+    manag_info_str = format_info(manag_info)
+
+    # Display information in collapsible sections
+    with st.expander("🌳 Habitat Class Information"):
+        st.markdown(habitat_info_str, unsafe_allow_html=True)
+
+    with st.expander("🦜 Species Groups Information"):
+        st.markdown(species_info_str, unsafe_allow_html=True)
+
+    with st.expander("🌍 Impact Description Information"):
+        st.markdown(impact_info_str, unsafe_allow_html=True)
+
+    with st.expander("🍃 Management and Conservation Measures Information"):
+        st.markdown(manag_info_str, unsafe_allow_html=True)
+
+    #############################################################################################################################################
+    #############################################################################################################################################
+    # AMELIE
+    #############################################################################################################################################
+    #############################################################################################################################################
+
+    #Define which quartal
+    start = date_range_df[(date_range_df['Quartal'] == quarter_dropdown) & (date_range_df['Year'] == selected_year)]['Start_Date'].values[0]
+    end = date_range_df[(date_range_df['Quartal'] == quarter_dropdown) & (date_range_df['Year'] == selected_year)]['End_Date'].values[0]
+
+    #############################################################################################################################################
+    #############################################################################################################################################
+    # Part I
+    #############################################################################################################################################
+    #############################################################################################################################################
+
+    with st.container():
+        st.markdown('<h2 style="font-size:24px;">Part I: Historical Land Cover Proportions</h2>', unsafe_allow_html=True)
+        st.markdown("This section will display the change in land cover over time using images.")
+
+        # Convert start and end dates to ee.Date
+        START = ee.Date(str(start))
+        END = ee.Date(str(end))
+
+        # Filter the shapefile for the specific protected area
+        specific_feature_collection = shapefile.filter(ee.Filter.eq('SITECODE', selected_sitecode))
+        geometry = specific_feature_collection.geometry()
+
+        # Create a filter based on the geometry and date range
+        col_filter = ee.Filter.And(
+            ee.Filter.geometry(geometry),
+            ee.Filter.date(START, END),
+        )
+
+        # Apply the filter to the DynamicWorld and Sentinel-2 collections
+        dw_col = ee.ImageCollection('GOOGLE/DYNAMICWORLD/V1').filter(col_filter).filterBounds(geometry)
+        dw_col_clipped = dw_col.map(lambda image: image.clip(geometry))
+        s2_col = ee.ImageCollection('COPERNICUS/S2').filter(col_filter)
+
+        # Join corresponding DW and S2 images
+        dw_s2_col = ee.Join.saveFirst('s2_img').apply(
+            dw_col_clipped,
+            s2_col,
+            ee.Filter.equals(leftField='system:index', rightField='system:index'),
+        )
+
+        # Extract an example DW image and its source S2 image
+        dw_image = ee.Image(dw_s2_col.first())
+        s2_image = ee.Image(dw_image.get('s2_img'))
+
+        # Define land cover class names and their corresponding color palette
+        CLASS_NAMES = [
+            'water', 'trees', 'grass', 'flooded_vegetation', 'crops',
+            'shrub_and_scrub', 'built', 'bare', 'snow_and_ice'
+        ]
+        VIS_PALETTE = [
+            '419bdf', '397d49', '88b053', '7a87c6', 'e49635',
+            'dfc35a', 'c4281b', 'a59b8f', 'b39fe1'
+        ]
+
+        # Create an RGB image of the label (most likely class) on [0, 1]
+        dw_rgb = (
+            dw_image.select('label')
+            .visualize(min=0, max=8, palette=VIS_PALETTE)
+            .divide(255)
+        )
+
+        # Get the most likely class probability
+        top1_prob = dw_image.select(CLASS_NAMES).reduce(ee.Reducer.max())
+
+        # Create a hillshade of the most likely class probability on [0, 1]
+        top1_prob_hillshade = ee.Terrain.hillshade(top1_prob.multiply(100)).divide(255)
+
+        # Combine the RGB image with the hillshade
+        dw_rgb_hillshade = dw_rgb.multiply(top1_prob_hillshade)
+
+        # Get lon and lat of protected area
+        dict_pa = specific_feature_collection.getInfo()
+        lon = dict_pa.get('features')[0].get('properties').get('lon')
+        lat = dict_pa.get('features')[0].get('properties').get('lat')
+
+        # Initialize map
+        m = geemap.Map(center=(lat, lon), zoom=14)
+
+        # Add protected area layer
+        m.addLayer(geometry, {}, 'Protected Area')
+
+        # Add Dynamic World layer
+        m.addLayer(dw_rgb_hillshade, {'min': 0, 'max': 0.65}, 'Dynamic World Dataset')
+
+
+        # Display map in Streamlit
+        m.to_streamlit(height=600)
+
+
+    #############################################################################################################################################
+    #############################################################################################################################################
+    # FLORI
+    #############################################################################################################################################
+    #############################################################################################################################################
+
+    df_lc = df.drop(columns=['temperature_quarterly_mean', 'precipitation_quarterly_mean', 'water-vapor-pressure_quarterly_mean', 'cloud-cover_quarterly_mean'])
+    df_eco = df[["SITECODE", "quarter_start", "temperature_quarterly_mean", "precipitation_quarterly_mean", "water-vapor-pressure_quarterly_mean", "cloud-cover_quarterly_mean"]].copy()
+
+    # Integration of graph code
+    df_lc['quarter_start'] = pd.to_datetime(df_lc['quarter_start'])
+    df_eco['quarter_start'] = pd.to_datetime(df_lc['quarter_start'])
+
+    #############################################################################################################################################
+    #############################################################################################################################################
+    # Part II
+    #############################################################################################################################################
+    #############################################################################################################################################
+
+    with st.container():
+        st.markdown('<h2 style="font-size:24px;">Part II: Predictions of Change in Land Cover Proportions over Time</h2>', unsafe_allow_html=True)
+        st.markdown("This section will display the historical evolution and predicted change over the next 10 years.")
+
+
+        # Define color dictionary for land cover categories
+        color_dict = {
+            'Trees': '#397d49',
+            'Snow and Ice': '#b39fe1',
+            'Water': '#419bdf',
+            'Bare Ground': '#a59b8f',
+            'Crops': '#e49635',
+            'Grass': '#88b053',
+            'Shrub and Scrub': '#dfc35a',
+            'Built Area': '#c4281b',
+            'Flooded Vegetation': '#7a87c6'
+        }
+
+    def update_df(sitecode, quarter):
+        filtered_pa_data = df_lc[df_lc['SITECODE'] == sitecode]
+        start_date = quarters[quarter]
+        quarter_dates = filtered_pa_data[filtered_pa_data['quarter_start'].dt.strftime('%m-%d') == start_date]
+        return quarter_dates
+
+    quarter_dates = update_df(selected_sitecode, quarter_dropdown)
+
+    # change negative values for lc proportions to 0
+    quarter_dates.iloc[:, 3:] = quarter_dates.iloc[:, 3:].clip(lower=0)
+
+    plt.rcParams.update({
+        'font.size': 10,
+        'font.family': 'sans-serif',
+        'font.sans-serif': ['Arial'],
+        'axes.titlesize': 12,
+        'axes.labelsize': 10,
+        'xtick.labelsize': 10,
+        'ytick.labelsize': 10,
+    })
+
+    def update_plot(quarter_dates, sitecode, quarter):
+        fig, ax = plt.subplots(figsize=(16, 8))
+
+        # Set the Seaborn style
+        sns.set(style="whitegrid")
+
+        # Get colors for the categories from the color dictionary, falling back to default if not found
+        colors = [color_dict.get(col, 'grey') for col in quarter_dates.columns if col not in ['quarter_start', 'SITECODE']]
+
+        quarter_dates.set_index('quarter_start').plot(kind='area', stacked=True, color=colors, alpha=0.8, ax=ax)
+        #ax.set_title(f'Land Cover Proportions Over the Years for {sitecode} in {quarter}', fontsize=12)
+        ax.set_xlabel('Year', fontsize=16)
+        ax.set_ylabel('Proportion', fontsize=16)
+        ax.tick_params(axis='x', labelsize=16, rotation=0)
+        ax.tick_params(axis='y', labelsize=16)
+        #ax.legend(title='Land Cover Category', bbox_to_anchor=(0, -0.15), ncol = 2, loc='upper left', fontsize=16, title_fontsize='18')
+        ax.legend().set_visible(False)
+        ax.grid(False)
+
+        ax.axvline(pd.to_datetime('2025-01-01'), color='r', linestyle='--')
+
+        # Adjust margins to remove the gap
+        ax.margins(x=0, y=0)
+        plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.1)
+
+        # Return the Matplotlib figure object
+        return fig
+
+    fig = update_plot(quarter_dates, selected_sitecode, quarter_dropdown)
+
+    # Display the plot in Streamlit
+    st.pyplot(fig)
+
+
+    #############################################################################################################################################
+    #############################################################################################################################################
+    # Part III
+    #############################################################################################################################################
+    #############################################################################################################################################
+
+
+    # Additional graphs for temperature, precipitation, water-vapor-pressure, and cloud-cover:
+    with st.container():
+        st.markdown('<h2 style="font-size:24px;">Part III: Predictions of Change in Ecological Variables over Time</h2>', unsafe_allow_html=True)
+        st.markdown("This section will display the change in temperature, precipitation, water pressure and cloud cover from 2015 to 2035.")
+        import plotly.graph_objects as go
+
+        # Filter the data for the selected sitecode and quarter
+        quarter_data = df_eco[df_eco['SITECODE'] == selected_sitecode]
+        quarter_data = quarter_data[quarter_data['quarter_start'].dt.quarter == int(quarter_dropdown[1])]
+
+        # Create the figure
+        fig = go.Figure()
+
+        # Add traces for each ecological variable
+        fig.add_trace(go.Scatter(x=quarter_data['quarter_start'], y=quarter_data['temperature_quarterly_mean'], mode='lines', name='Temperature', line=dict(color='red'), textfont=dict(size=25)))
+        fig.add_trace(go.Scatter(x=quarter_data['quarter_start'], y=quarter_data['precipitation_quarterly_mean'], mode='lines', name='Precipitation', line=dict(color='blue'), textfont=dict(size=25)))
+        fig.add_trace(go.Scatter(x=quarter_data['quarter_start'], y=quarter_data['water-vapor-pressure_quarterly_mean'], mode='lines', name='Water Vapor Pressure', line=dict(color='green'), textfont=dict(size=25)))
+        fig.add_trace(go.Scatter(x=quarter_data['quarter_start'], y=quarter_data['cloud-cover_quarterly_mean'], mode='lines', name='Cloud Cover', line=dict(color='orange'), textfont=dict(size=25)))
+
+        # Update layout to add hover mode, legend positioning, and figure size
+        fig.update_layout(
+            hovermode='x', legend=dict(x=0, y=-0.20), xaxis_title='Year', yaxis_title='Value',
+            xaxis=dict(
+                tickmode='array',
+                tickvals=pd.date_range(start=quarter_data['quarter_start'].min(), end=quarter_data['quarter_start'].max(), freq='YS'),
+                tickformat="%Y"
+            ),
+            width=1200,
+            height=800
+        )
+
+        # Add line in 2025 to mark the start of predicted values
+        fig.add_shape(
+            type="line",
+            x0="2025-01-01",
+            y0=0,
+            x1="2025-01-01",
+            y1=1,
+            line=dict(color="red", width=2, dash="dash"),
+            xref="x",
+            yref="paper",
+        )
+
+        # Show the plot
+        st.plotly_chart(fig)
+
+
+    # Add footer
+    st.markdown("""
+        <div class="footer">
+            Created with ❤️ by Amélie, Tim, Flori, and Ali
+        </div>
+        """, unsafe_allow_html=True)
+
+    #############################################################################################################################################
+    #############################################################################################################################################
+    # Page 3
+    #############################################################################################################################################
+    #############################################################################################################################################
+
+# Intro page
+def outlook():
+    # Change background color of sidebar
+    st.markdown("""
+    <style>
+        [data-testid=stSidebar] {
+            background-color: #a2ac94;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.title("Outlook")
+    st.markdown("""
+    <style>
+        .st-emotion-cache-12fmjuu {
+            visibility: hidden;
+        }
+        #outlook {
+            color: white;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="font-size: 20px; color:white;">
+    <strong>Future Directions:</strong>
+    <ul>
+    <li>Point 1</li>
+    <li>Point 2</li>
+    <li>Point 3</li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="font-size: 20px; color:white;">
+    <strong>Acknowledgement:</strong>
+    <ul>
+    <li>Point 1</li>
+    <li>Point 2</li>
+    <li>Point 3</li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Set the background image
+    background_image = """
+    <style>
+    [data-testid="stAppViewContainer"] > .main {
+        background-image: url("https://www.unccd.int/sites/default/files/styles/towebp/public/2023-12/iStock-1462969524.jpg.webp");
+        background-size: 100vw 100vh;  # This sets the size to cover 100% of the viewport width and height
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+    </style>
+    """
+    st.markdown(background_image, unsafe_allow_html=True)
+
+# Sidebar navigation
+def navigation():
+    st.sidebar.title("Navigation")
+    page = st.sidebar.radio("Go to", ["Project Introduction", "Predictions", "Outlook"])
+
+    return page
+
+def run():
+    page = navigation()
+
+    if page == "Project Introduction":
+        intro()
+    elif page == "Predictions":
+        main()
+    elif page == "Outlook":
+        outlook()
+
+if __name__ == "__main__":
+    run()
