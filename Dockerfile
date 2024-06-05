@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . .
 
 # Install any needed packages specified in requirements.txt
-RUN pip install -r requirements.txt
+RUN pip install -r requirements_api.txt
 RUN pip install .
 # Run uvicorn server for FastAPI
 
