@@ -8,8 +8,7 @@ geopandas
 streamlit_folium
 colorama
 
-
-ee
+earthengine-api
 geemap
 geopandas
 matplotlib
