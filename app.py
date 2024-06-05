@@ -47,7 +47,8 @@ if DATA_SOURCE == 'api':
 
         table_dict = {}
         for table_name in table_names:
-            table = pd.DataFrame(requests.get(url=url_gcp+table_name).json())
+            response = requests.get(url=url_gcp+table_name).json()
+            table = pd.DataFrame(response)
             table_dict[table_name] = table
         return table_dict
 
