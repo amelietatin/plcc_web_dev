@@ -42,8 +42,8 @@ if DATA_SOURCE == 'api':
     @st.cache_data
     def get_data():
         table_names = ['final_df','bioregion', 'habitat_class', 'impact_management','species', 'date_ranges']
-        url_local = 'http://localhost:8000/data?table_name='
-        url_gcp= 'https://landcoverapi-zxm7fkrvaq-ew.a.run.app/data?table_name='
+        url_local = 'http://localhost:8000//data?table_name='
+        url_gcp= 'https://landcoverapi-zxm7fkrvaq-ew.a.run.app//data?table_name='
 
         table_dict = {}
         for table_name in table_names:
