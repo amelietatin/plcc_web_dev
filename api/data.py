@@ -28,11 +28,8 @@ def get_data(
     result = query_job.result()
     df = result.to_dataframe()
 
-    # Store as CSV if the BQ query returned at least one valid line
-    if df.shape[0] > 1:
-        df.to_csv('test.csv', header=data_has_header, index=False)
-
     print(f"✅ Data loaded, with shape {df.shape}")
+    print(df.head(1))
 
     return df
 
@@ -87,8 +84,6 @@ if __name__ == '__main__':
         #table_2 = table.drop(columns=["Unnamed: 0"])
         #print(table_2.head())
         load_data_to_bq(table, GCP_PROJECT, BQ_DATASET, tablename, True)
-
-        break
 
     # shapefile = gpd.read_file(os.path.join(root, 'raw_data/sample_protected_areas_624', "protected_areas_624.shp"))
     # load_data_to_bq(shapefile, GCP_PROJECT, BQ_DATASET, 'protected_areas_shp', True)
