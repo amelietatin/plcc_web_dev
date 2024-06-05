@@ -7,3 +7,11 @@ db-dtypes
 geopandas
 streamlit_folium
 colorama
+
+
+ee
+geemap
+geopandas
+matplotlib
+seaborn
+numpy
