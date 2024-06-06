@@ -21,11 +21,8 @@ st.set_page_config(page_title="Predicting Land Cover Changes in European Protect
 
 
 # Navigation between Page 1, 2 and 3
-
 # Intro page
 def intro():
-
-    st.title("Predicting Land Cover Changes in European Protected Areas")
     st.markdown("""
     <style>
         .st-emotion-cache-12fmjuu {
@@ -34,51 +31,52 @@ def intro():
         #project-introduction {
             color: white;
         }
-    </style>
-    """, unsafe_allow_html=True)
-    st.markdown("""
-    <div style="font-size: 20px; color:white;">
-    <strong>Why is this project important?</strong>
-    <ul>
-    <li>Biodiversity and habitat conservation (early warning system and habitat preservation)</li>
-    <li>Climate change mitigation and adaptation (adaptation Strategies, carbon sequestration)</li>
-    </ul>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div style="font-size: 20px; color:white;">
-    <strong>How did we proceed?</strong>
-    <ul>
-    <li>One sample of NATURA 2000 protected areas</li>
-    <li>9 Landcovers (based on satellite data)</li>
-    <li>4 climate features (based on Copernicus data)</li>
-    <li>--> Deep Learning RNN model </li>
-    </ul>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Change background color of sidebar
-    st.markdown("""
-    <style>
+        h1 {
+            color: white !important;
+            font-size: 36px !important;
+        }
+        h2, h3 {
+            color: white !important;
+            font-size: 28px !important;
+        }
+        p, li {
+            font-size: 22px !important;  /* Increase the size of paragraph and list item text */
+        }
         [data-testid=stSidebar] {
             background-color: #a2ac94;
+        }
+        [data-testid="stAppViewContainer"] > .main {
+            background-image: url("https://adelphi.de/system/files/styles/og_image/private/image/mario-dobelmann-pdkvqvwyyu4-unsplash.jpg?itok=bDtzCR8p");
+            background-size: 100vw 100vh;
+            background-position: center;
+            background-repeat: no-repeat;
         }
     </style>
     """, unsafe_allow_html=True)
 
-    # Set the background image
-    background_image = """
-    <style>
-    [data-testid="stAppViewContainer"] > .main {
-        background-image: url("https://adelphi.de/system/files/styles/og_image/private/image/mario-dobelmann-pdkvqvwyyu4-unsplash.jpg?itok=bDtzCR8p");
-        background-size: 100vw 100vh;  # This sets the size to cover 100% of the viewport width and height
-        background-position: center;
-        background-repeat: no-repeat;
-    }
-    </style>
-    """
-    st.markdown(background_image, unsafe_allow_html=True)
+    st.title("Predicting Land Cover Changes in European Protected Areas")
+
+    st.markdown("""
+    <div style="font-size: 20px; color:white;">
+    <h2>Why is this project important?</h2>
+    <ul>
+    <li> Landscapes around us are constantly changing due to factors like climate change, urbanization, and natural events </li>
+    <li>Over the past three decades, Europe has lost 421 million birds from its protected areas ! </li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="font-size: 20px; color:white;">
+    <h2>How did we proceed?</h2>
+    <ul>
+    <li>One sample of NATURA 2000 protected areas</li>
+    <li>9 Landcovers (based on satellite data)</li>
+    <li>4 climate features (based on Copernicus data): historical and future data </li>
+    <li>--> Deep Learning RNN model </li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 #############################################################################################################################################
@@ -588,6 +586,14 @@ def outlook():
         unsafe_allow_html=True
     )
 
+    st.markdown("""
+    <style>
+        .st-emotion-cache-12fmjuu {
+            visibility: hidden;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
     # Bullet points with larger font size
     st.markdown(
         """
@@ -598,9 +604,9 @@ def outlook():
         }
         </style>
         <ul class="bullet-points">
+            <li><strong>Model Enhancement:</strong> Updating our model with new data and improving its accuracy, could make it a reliable tool for long-term ecological forecasting.</li>
             <li><strong>Policy Planning:</strong> By predicting changes, policymakers can design better conservation strategies and allocate resources more effectively.</li>
             <li><strong>Stakeholder Engagement:</strong> Local communities, conservationists, and other stakeholders can use this tool to make informed decisions and participate in sustainable land management.</li>
-            <li><strong>Model Enhancement:</strong> Updating our model with new data and improving its accuracy, could make it a reliable tool for long-term ecological forecasting.</li>
         </ul>
         """,
         unsafe_allow_html=True
