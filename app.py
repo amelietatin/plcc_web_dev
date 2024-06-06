@@ -36,12 +36,12 @@ def intro():
         }
         h1 {
             color: white !important;
-            font-size: 80px !important;
+            font-size: 70px !important;
             text-align: center !important;
         }
         h2 {
             color: white !important;
-            font-size: 60px !important;
+            font-size: 50px !important;
             text-align: center !important;
         }
         h3 {
@@ -61,8 +61,8 @@ def intro():
         }
         .header-logo {
             position: absolute;
-            top: 40px;
-            left: 40px;
+            top: 30px;
+            left: 30px;
             width: 100px;
         }
     </style>
