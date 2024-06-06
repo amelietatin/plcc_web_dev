@@ -25,7 +25,7 @@ st.set_page_config(page_title="Predicting Land Cover Changes in European Protect
 # Intro page
 def intro():
 
-    st.title("Project Introduction")
+    st.title("Predicting Land Cover Changes in European Protected Areas")
     st.markdown("""
     <style>
         .st-emotion-cache-12fmjuu {
@@ -38,33 +38,22 @@ def intro():
     """, unsafe_allow_html=True)
     st.markdown("""
     <div style="font-size: 20px; color:white;">
-    <strong>Why did we choose this project?:</strong>
+    <strong>Why is this project important?</strong>
     <ul>
-    <li>Point 1</li>
-    <li>Point 2</li>
-    <li>Point 3</li>
+    <li>Biodiversity and habitat conservation (early warning system and habitat preservation)</li>
+    <li>Climate change mitigation and adaptation (adaptation Strategies, carbon sequestration)</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown("""
     <div style="font-size: 20px; color:white;">
-    <strong>Why is it so important to increase awareness?:</strong>
+    <strong>How did we proceed?</strong>
     <ul>
-    <li>Point 1</li>
-    <li>Point 2</li>
-    <li>Point 3</li>
-    </ul>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div style="font-size: 20px; color:white;">
-    <strong>What do we hope to achieve?:</strong>
-    <ul>
-    <li>Point 1</li>
-    <li>Point 2</li>
-    <li>Point 3</li>
+    <li>One sample of NATURA 2000 protected areas</li>
+    <li>9 Landcovers (based on satellite data)</li>
+    <li>4 climate features (based on Copernicus data)</li>
+    <li>--> Deep Learning RNN model </li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -82,7 +71,7 @@ def intro():
     background_image = """
     <style>
     [data-testid="stAppViewContainer"] > .main {
-        background-image: url("https://media.wired.com/photos/63dd40bb84464089ca2fc6ab/master/pass/Sci-amazon-1322470077");
+        background-image: url("https://adelphi.de/system/files/styles/og_image/private/image/mario-dobelmann-pdkvqvwyyu4-unsplash.jpg?itok=bDtzCR8p");
         background-size: 100vw 100vh;  # This sets the size to cover 100% of the viewport width and height
         background-position: center;
         background-repeat: no-repeat;
@@ -190,7 +179,7 @@ def main():
     selected_bioregions = st.sidebar.selectbox(
         label='Bioregion:',
         options=bioregions,
-        index=0,
+        index=8,
         help='Select a Bioregion',
     )
 
@@ -200,7 +189,7 @@ def main():
     selected_sitecode = st.sidebar.selectbox(
         label='Country:',
         options=countries,
-        index=0,
+        index=2,
         help='Select a Country',
     )
 
@@ -210,14 +199,14 @@ def main():
     selected_sitecode = st.sidebar.selectbox(
         label='Protected Area:',
         options=sitecodes,
-        index=0,
+        index=1,
         help='Select a Protected Area',
     )
 
     selected_sitecode = bioregion_sample[(bioregion_sample['SITENAME'] == selected_sitecode)]['SITECODE'].values[0]
 
     #YEARS
-    years = date_range_df['Year'].unique()
+    years = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
     selected_year = st.sidebar.select_slider(
             label='Year:',
             options=list(years),
@@ -591,53 +580,37 @@ def main():
 # Intro page
 def outlook():
     # Change background color of sidebar
-    st.markdown("""
-    <style>
-        [data-testid=stSidebar] {
-            background-color: #a2ac94;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+    # Title in white color and large size
 
-    st.title("Outlook")
-    st.markdown("""
-    <style>
-        .st-emotion-cache-12fmjuu {
-            visibility: hidden;
-        }
-        #outlook {
+        # Title in white color and very large size
+    st.markdown(
+        "<h1 style='color:white; font-size:48px;'>Future Outlook</h1>",
+        unsafe_allow_html=True
+    )
+
+    # Bullet points with larger font size
+    st.markdown(
+        """
+        <style>
+        .bullet-points {
             color: white;
+            font-size: 60px;
         }
-    </style>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div style="font-size: 20px; color:white;">
-    <strong>Future Directions:</strong>
-    <ul>
-    <li>Point 1</li>
-    <li>Point 2</li>
-    <li>Point 3</li>
-    </ul>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div style="font-size: 20px; color:white;">
-    <strong>Acknowledgement:</strong>
-    <ul>
-    <li>Point 1</li>
-    <li>Point 2</li>
-    <li>Point 3</li>
-    </ul>
-    </div>
-    """, unsafe_allow_html=True)
+        </style>
+        <ul class="bullet-points">
+            <li><strong>Policy Planning:</strong> By predicting changes, policymakers can design better conservation strategies and allocate resources more effectively.</li>
+            <li><strong>Stakeholder Engagement:</strong> Local communities, conservationists, and other stakeholders can use this tool to make informed decisions and participate in sustainable land management.</li>
+            <li><strong>Model Enhancement:</strong> Updating our model with new data and improving its accuracy, could make it a reliable tool for long-term ecological forecasting.</li>
+        </ul>
+        """,
+        unsafe_allow_html=True
+    )
 
     # Set the background image
     background_image = """
     <style>
     [data-testid="stAppViewContainer"] > .main {
-        background-image: url("https://www.unccd.int/sites/default/files/styles/towebp/public/2023-12/iStock-1462969524.jpg.webp");
+        background-image: url("https://3e-news.net/web/files/articles/29740/main_image/thumb_1700x960_thumb-1700x1260-aytos-mountain-2.jpg");
         background-size: 100vw 100vh;  # This sets the size to cover 100% of the viewport width and height
         background-position: center;
         background-repeat: no-repeat;
