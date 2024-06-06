@@ -178,7 +178,7 @@ def main():
 
     shapefile = load_gee()
 
-    DATA_SOURCE = 'local'
+    DATA_SOURCE = 'api'
 
     if DATA_SOURCE == 'api':
 
