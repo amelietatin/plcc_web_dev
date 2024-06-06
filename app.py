@@ -308,8 +308,29 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
+    # Display a loading message
+    selecting_message = st.empty()
+    selecting_message.markdown(
+        """
+        <div style="text-align: center; font-size: 40px; font-weight: bold; margin-top: 50px;">
+            Welcome to the Land Cover Forecast App!
+            <br><br>
+            It looks like you haven't made a selection yet!
+            <br><br>
+            1) Select Input Parameters
+            <br><br>
+            2) Click on Show Map, Show Predictions or have a look at the Description of the Protected Area
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
     #Add SELECT button for chosen parameters to show map
     if st.sidebar.button('Show Map'):
+
+        selecting_message.empty()
+        loading_message = st.empty()
+        loading_message.text("LOADING MAP...")
         ## add below
 
         st.title("Land Cover Map")
@@ -408,9 +429,15 @@ def main():
             # Display map in Streamlit
             m.to_streamlit(height=600)
 
+            ## Remove the loading message
+            loading_message.empty()
+
 
     #Add SELECT button for chosen parameters to show predictions
     if st.sidebar.button('Show Predictions'):
+
+        selecting_message.empty()
+
 
         st.title("Protected Area Historical Data and Predictions")
 
@@ -559,6 +586,8 @@ def main():
 
     # Button to show descriptions of PA
     if st.sidebar.button('Show Description'):
+
+        selecting_message.empty()
 
         st.title("Protected Area Information Box")
     #############################################################################################################################################
