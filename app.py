@@ -139,9 +139,9 @@ def project():
     <h3>It enables proactive planning to deal with:</h3>
     <ul>
     <li>Climate Change</li>
-    <li>Natural Disasters</li>
+    <li>Human Impacts (Deforestation,...)</li>
     <li>Animals Habitat Loss and Species Extinction</li>
-    <li>And more...</li>
+    <li>Natural Disasters...</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -150,9 +150,9 @@ def project():
     <div class="text-box" style="font-size: 20px; color:white;">
     <h2>How did we proceed?</h2>
     <ul>
-    <li>Collecting data for NATURA 2000 protected areas using Satellite Images</li>
+    <li>Collecting Data for NATURA 2000 Protected Areas using Satellite Images</li>
     <li>A Deep Learning Model for Timeseries</li>
-    <li>Predicting 9 Landcovers based on 4 climate features</li>
+    <li>Predicting 9 Landcovers based on 4 Climate Features</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
