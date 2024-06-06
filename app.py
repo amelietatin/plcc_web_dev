@@ -253,7 +253,7 @@ def main():
     selected_bioregions = st.sidebar.selectbox(
         label='Bioregion:',
         options=bioregions,
-        index=8,
+        index=0,
         help='Select a Bioregion',
     )
 
@@ -263,7 +263,7 @@ def main():
     selected_sitecode = st.sidebar.selectbox(
         label='Country:',
         options=countries,
-        index=2,
+        index=0,
         help='Select a Country',
     )
 
@@ -649,8 +649,8 @@ def main():
     """
 
     # Add legend to sidebar
-    st.sidebar.markdown(quarter_html, unsafe_allow_html=True)
     st.sidebar.markdown(legend_html, unsafe_allow_html=True)
+    st.sidebar.markdown(quarter_html, unsafe_allow_html=True)
 
     #############################################################################################################################################
     #############################################################################################################################################
@@ -660,54 +660,63 @@ def main():
 
 # Outlook page
 def outlook():
-    st.markdown(
-        "<h1 style='color:white; font-size:48px;'>Future Outlook</h1>",
-        unsafe_allow_html=True
-    )
 
     st.markdown("""
     <style>
         .st-emotion-cache-12fmjuu {
             visibility: hidden;
         }
+        #project-introduction {
+            color: white;
+        }
+        h1 {
+            color: white !important;
+            font-size: 60px !important;
+        }
+        h2{
+            color: white !important;
+            font-size: 60px !important;
+        }
+        h3 {
+            color: white !important;
+            font-size: 60px !important;
+        }
+        p {
+            margin-bottom: 30px; /* Adjust the value as needed */
+        }
+
+        li {
+            font-size: 22px !important;  /* Increase the size of paragraph and list item text */
+        }
         [data-testid=stSidebar] {
             background-color: #a2ac94;
+        }
+        [data-testid="stAppViewContainer"] > .main {
+            background-image: url("https://3e-news.net/web/files/articles/29740/main_image/thumb_1700x960_thumb-1700x1260-aytos-mountain-2.jpg");
+            background-size: 100vw 100vh;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .text-box {
+            background-color: rgba(169, 169, 169, 0.8); /* Gray background with some transparency */
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px; /* Add margin between text-boxes */
         }
     </style>
     """, unsafe_allow_html=True)
 
-    # Bullet points with larger font size
-    st.markdown(
-        """
-        <style>
-        .bullet-points {
-            color: white;
-            font-size: 60px;
-        }
-        </style>
-        <ul class="bullet-points">
-            <li><strong>Model Enhancement:</strong> Updating our model with new data and improving its accuracy, could make it a reliable tool for long-term ecological forecasting.</li>
-            <li><strong>Policy Planning:</strong> By predicting changes, policymakers can design better conservation strategies and allocate resources more effectively.</li>
-            <li><strong>Stakeholder Engagement:</strong> Local communities, conservationists, and other stakeholders can use this tool to make informed decisions and participate in sustainable land management.</li>
-        </ul>
-        """,
-        unsafe_allow_html=True
-    )
 
-    # Set the background image
-    background_image = """
-    <style>
-    [data-testid="stAppViewContainer"] > .main {
-        background-image: url("https://3e-news.net/web/files/articles/29740/main_image/thumb_1700x960_thumb-1700x1260-aytos-mountain-2.jpg");
-        background-size: 100vw 100vh;  # This sets the size to cover 100% of the viewport width and height
-        background-position: center;
-        background-repeat: no-repeat;
-    }
-    </style>
-    """
-    st.markdown(background_image, unsafe_allow_html=True)
-
-
+    st.markdown("""
+    <div class="text-box" style="font-size: 20px; color:white;">
+    <h2>Future Outlook</h2>
+    <ul>
+    <li>Model Enhancement</li>
+    <li>Policy Planning</li>
+    <li>Stakeholder Engagement</li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Sidebar navigation
 def navigation():
