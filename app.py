@@ -19,70 +19,26 @@ import requests
 # Page configuration
 st.set_page_config(page_title="Predicting Land Cover Changes in European Protected Areas", page_icon="🌍", layout="wide")
 
-# Introduction Page
 def intro():
     st.markdown("""
     <style>
-        .st-emotion-cache-12fmjuu {
-            visibility: hidden;
-        }
-        #project-introduction {
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh; /* 100% of the viewport height */
-        }
-        h1 {
-            color: white !important;
-            font-size: 70px !important;
-            text-align: center !important;
-        }
-        h2 {
-            color: white !important;
-            font-size: 50px !important;
-            text-align: center !important;
-        }
-        h3 {
-            color: white !important;
-            font-size: 40px !important;
-            display: inline-block;
-            margin: 0 15px;
-        }
+
         [data-testid=stSidebar] {
             background-color: #a2ac94;
         }
         [data-testid="stAppViewContainer"] > .main {
-            background-image: url("https://adelphi.de/system/files/styles/og_image/private/image/mario-dobelmann-pdkvqvwyyu4-unsplash.jpg?itok=bDtzCR8p");
-            background-size: cover;
+            background-image: url("https://i.imgur.com/ntB6oLV.jpeg");
+            background-size: calc(100% - 3%);
             background-position: center;
             background-repeat: no-repeat;
         }
-        .header-logo {
-            position: absolute;
-            top: 30px;
-            left: 30px;
-            width: 100px;
+        .text-box {
+            background-color: rgba(169, 169, 169, 0.8); /* Gray background with some transparency */
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px; /* Add margin between text-boxes */
         }
     </style>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-        <div id="project-introduction">
-            <img src="https://miro.medium.com/v2/resize:fit:2400/1*cen9t2Qh4zLWzQzlGF4CUg.png" alt="Logo" class="header-logo">
-            <h1>Land Cover Forecast</h1>
-            <h2>Predicting Land Cover - Preserving the Future</h2>
-            <div style="text-align: center;">
-                <h3>Amélie Tatin</h3>
-                <h3>Florentine Kleist</h3>
-                <h3>Ali Shishehgar</h3>
-                <h3>Tim Reess</h3>
-            </div>
-            <div style="font-size: 24px; color:white;">
-                <h3>Batch 1615</h3>
-            </div>
-        </div>
     """, unsafe_allow_html=True)
 
 # Project page
@@ -686,43 +642,17 @@ def main():
     # Page 3
     #############################################################################################################################################
     #############################################################################################################################################
-
-# Outlook page
 def outlook():
 
     st.markdown("""
     <style>
-        .st-emotion-cache-12fmjuu {
-            visibility: hidden;
-        }
-        #project-introduction {
-            color: white;
-        }
-        h1 {
-            color: white !important;
-            font-size: 60px !important;
-        }
-        h2{
-            color: white !important;
-            font-size: 60px !important;
-        }
-        h3 {
-            color: white !important;
-            font-size: 60px !important;
-        }
-        p {
-            margin-bottom: 30px; /* Adjust the value as needed */
-        }
 
-        li {
-            font-size: 22px !important;  /* Increase the size of paragraph and list item text */
-        }
         [data-testid=stSidebar] {
             background-color: #a2ac94;
         }
         [data-testid="stAppViewContainer"] > .main {
-            background-image: url("https://3e-news.net/web/files/articles/29740/main_image/thumb_1700x960_thumb-1700x1260-aytos-mountain-2.jpg");
-            background-size: 100vw 100vh;
+            background-image: url("https://i.imgur.com/V6pyS39.jpeg");
+            background-size: calc(100% - 3%);
             background-position: center;
             background-repeat: no-repeat;
         }
@@ -733,18 +663,6 @@ def outlook():
             margin-bottom: 20px; /* Add margin between text-boxes */
         }
     </style>
-    """, unsafe_allow_html=True)
-
-
-    st.markdown("""
-    <div class="text-box" style="font-size: 20px; color:white;">
-    <h2>Future Outlook</h2>
-    <ul>
-    <li>Model Enhancement</li>
-    <li>Policy Planning</li>
-    <li>Stakeholder Engagement</li>
-    </ul>
-    </div>
     """, unsafe_allow_html=True)
 
 # Sidebar navigation
